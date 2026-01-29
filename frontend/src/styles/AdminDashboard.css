@@ -1,0 +1,28 @@
+.admin-dashboard {
+  background: #0f172a;
+  min-height: 100vh;
+  padding: 20px;
+  color: white;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  background: #020617;
+  padding: 20px;
+  border-radius: 14px;
+}
+
+.stat-card p {
+  opacity: 0.7;
+}
+
+.stat-card h3 {
+  margin-top: 8px;
+  font-size: 28px;
+}

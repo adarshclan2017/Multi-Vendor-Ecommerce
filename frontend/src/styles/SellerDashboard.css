@@ -1,0 +1,69 @@
+.seller-dash {
+  padding: 16px;
+}
+
+.seller-dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.seller-dash-head h2 {
+  margin: 0;
+  font-weight: 900;
+  font-size: 22px;
+}
+
+.sd-refresh {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.sd-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.sd-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.sd-card.wide {
+  grid-column: 1 / -1;
+}
+
+.sd-label {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.sd-value {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.sd-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px dashed #eee;
+}
+
+.sd-row:first-of-type {
+  border-top: none;
+}
+
+@media (max-width: 900px) {
+  .sd-grid {
+    grid-template-columns: 1fr;
+  }
+}

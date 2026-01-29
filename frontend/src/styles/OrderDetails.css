@@ -1,0 +1,141 @@
+.order-details-page {
+    max-width: 1200px;
+}
+
+.od-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.od-back {
+    text-decoration: none;
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e5e7eb;
+}
+
+.od-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 16px;
+}
+
+.od-card {
+    background: #0f1115;
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.od-status-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.od-status {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.od-pending {
+    background: rgba(99, 102, 241, 0.2);
+}
+
+.od-shipped {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+.od-delivered {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.od-cancelled {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+.od-items {
+    display: grid;
+    gap: 10px;
+}
+
+.od-item {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 10px;
+    border-radius: 14px;
+}
+
+.od-item img {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.od-name {
+    font-weight: 800;
+}
+
+.od-meta {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+.od-price {
+    font-weight: 900;
+}
+
+.od-title {
+    margin-bottom: 10px;
+}
+
+.od-address p {
+    margin: 4px 0;
+}
+
+.od-help {
+    margin-top: 12px;
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+@media (max-width: 992px) {
+    .od-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.od-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.od-cancel-btn {
+    border: none;
+    cursor: pointer;
+    font-weight: 800;
+    padding: 10px 14px;
+    border-radius: 12px;
+    color: #fff;
+    background: rgba(239, 68, 68, 0.22);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.od-cancel-btn:active {
+    transform: scale(0.98);
+}
+
+.od-page {
+  color: #ffffff;
+}
+

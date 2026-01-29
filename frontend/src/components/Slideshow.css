@@ -1,0 +1,27 @@
+.slideshow-container {
+  width: 100%;
+  max-width: 100%;
+  height: 350px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+/* Hide all slides */
+.slide {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* Show active slide */
+.slide.active {
+  display: block;
+}
+
+/* Image styling */
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

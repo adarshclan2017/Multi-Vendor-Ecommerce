@@ -1,0 +1,111 @@
+.so-page {
+  padding: 20px;
+}
+
+.so-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.so-refresh {
+  padding: 8px 12px;
+  border: none;
+  background: #222;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.so-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.so-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.so-table th,
+.so-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.so-mono {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.so-view {
+  padding: 7px 10px;
+  background: #0d6efd;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.so-disabled {
+  color: #999;
+}
+
+.so-error {
+  color: red;
+}
+
+.so-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  text-transform: capitalize;
+  border: 1px solid #ddd;
+}
+
+/* optional status colors */
+.so-pending { background: #fff3cd; border-color: #ffeeba; }
+.so-shipped { background: #cfe2ff; border-color: #b6d4fe; }
+.so-delivered { background: #d1e7dd; border-color: #badbcc; }
+.so-cancelled { background: #f8d7da; border-color: #f5c2c7; }
+
+.so-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px dashed #eee;
+  padding-top: 10px;
+}
+
+.so-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.so-img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  background: #fafafa;
+}
+
+.so-item-info {
+  flex: 1;
+}
+
+@media (max-width: 700px) {
+  .so-img {
+    width: 100%;
+    height: 160px;
+  }
+  .so-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

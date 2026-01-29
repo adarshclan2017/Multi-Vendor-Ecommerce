@@ -1,0 +1,195 @@
+.sod-page {
+  padding: 16px;
+}
+
+.sod-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sod-head h2 {
+  margin: 0;
+  font-weight: 900;
+  font-size: 22px;
+}
+
+.sod-sub {
+  margin: 4px 0 0;
+  opacity: 0.7;
+  font-size: 13px;
+}
+
+.sod-back {
+  text-decoration: none;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font-weight: 800;
+}
+
+.sod-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+}
+
+.sod-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.sod-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sod-status {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 12px;
+  text-transform: capitalize;
+  border: 1px solid #eee;
+}
+
+.sod-pending {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.sod-shipped {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.sod-delivered {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+}
+
+.sod-cancelled {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.sod-total {
+  font-size: 14px;
+}
+
+.sod-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sod-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px dashed #eee;
+  padding-top: 10px;
+}
+
+.sod-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.sod-img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: #fafafa;
+}
+
+.sod-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sod-name {
+  font-weight: 900;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sod-meta {
+  font-size: 13px;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.sod-line {
+  font-weight: 900;
+}
+
+.sod-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sod-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 900;
+  color: #fff;
+}
+
+.sod-btn.ship {
+  background: #2563eb;
+}
+
+.sod-btn.deliver {
+  background: #16a34a;
+}
+
+.sod-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.sod-addr p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .sod-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .sod-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sod-img {
+    width: 100%;
+    height: 180px;
+  }
+
+  .sod-line {
+    width: 100%;
+    text-align: right;
+  }
+}

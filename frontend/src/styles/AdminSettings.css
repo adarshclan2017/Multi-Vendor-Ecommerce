@@ -1,0 +1,152 @@
+.admin-settings {
+  background: #f9fafb;
+  padding: 30px;
+  min-height: 100%;
+}
+
+/* Title */
+.settings-title {
+  font-size: 26px;
+  margin-bottom: 25px;
+  color: #111827;
+}
+
+/* Sections */
+.settings-section {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+}
+
+.settings-section h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+/* Row toggle */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+
+/* Toggle switch */
+.switch {
+  position: relative;
+  width: 48px;
+  height: 24px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  background: #d1d5db;
+  border-radius: 24px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: 0.3s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background: #2563eb;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+/* Form */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+/* Upload */
+.upload-box {
+  border: 2px dashed #d1d5db;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* Danger */
+.danger {
+  border-left: 5px solid #dc2626;
+}
+
+.danger-btn {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.danger-outline {
+  background: transparent;
+  border: 1px solid #dc2626;
+  color: #dc2626;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Actions */
+.settings-actions {
+  text-align: right;
+  margin-top: 20px;
+}
+
+.save-btn {
+  background: #2563eb;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-settings {
+    padding: 20px;
+  }
+}

@@ -1,0 +1,150 @@
+/* Page Wrapper */
+.ordersuccess-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  padding: 20px;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Success Card */
+.ordersuccess-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 35px 30px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Success Icon */
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  font-weight: bold;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+}
+
+/* Heading */
+.ordersuccess-card h4 {
+  font-size: 22px;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+/* Paragraph */
+.ordersuccess-card p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Order Info Box */
+.order-info {
+  background: #f5f7fa;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 25px;
+  text-align: left;
+}
+
+.order-info p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* ✅ Order ID in BLACK */
+.order-id {
+  color: #000000;
+  font-weight: 600;
+}
+
+/* Buttons */
+.view-orders-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-bottom: 12px;
+}
+
+/* Primary Button */
+.view-orders-btn {
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+}
+
+.view-orders-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(22, 163, 74, 0.4);
+}
+
+/* Outline Button */
+.view-orders-btn.outline {
+  background: #ffffff;
+  border: 1px solid #16a34a;
+  color: #16a34a;
+}
+
+.view-orders-btn.outline:hover {
+  background: #ecfdf5;
+}
+
+/* Back Home Link */
+.back-home-btn {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.back-home-btn:hover {
+  color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .ordersuccess-card {
+    padding: 25px 20px;
+  }
+
+  .ordersuccess-card h4 {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,136 @@
+.au-page{
+  padding: 18px;
+  background:#0f172a;
+  min-height: 100vh;
+  color:#fff;
+}
+.au-page *{ color:#fff; }
+
+.au-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom: 12px;
+}
+.au-title{ margin:0; font-size:28px; font-weight:800; }
+.au-sub{ margin:6px 0 0; opacity:.75; }
+
+.au-btn{
+  background:#111827;
+  border:1px solid rgba(255,255,255,.12);
+  padding:10px 14px;
+  border-radius:12px;
+  cursor:pointer;
+}
+.au-btn:disabled{ opacity:.6; cursor:not-allowed; }
+
+.au-controls{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin: 14px 0 16px;
+}
+
+.au-search{
+  flex:1 1 360px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#0b1220;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  padding:10px 12px;
+}
+.au-ico{ opacity:.8; }
+.au-search input{
+  width:100%;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#fff;
+}
+
+.au-filter{
+  flex:0 0 200px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.au-filter label{ font-size:12px; opacity:.75; }
+.au-filter select{
+  background:#0b1220;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  padding:10px 12px;
+  outline:none;
+}
+
+.au-empty{
+  padding: 18px;
+  background:#0b1220;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  opacity:.85;
+}
+
+/* TABLE */
+.au-tableWrap{
+  background:#0b1220;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  overflow:hidden;
+}
+.au-table{
+  width:100%;
+  border-collapse:collapse;
+}
+.au-table thead th{
+  background:#070c16;
+  text-align:left;
+  padding:12px 14px;
+  font-weight:800;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+.au-table tbody td{
+  padding:14px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  vertical-align:top;
+}
+.au-table tbody tr:hover{ background:rgba(255,255,255,.03); }
+
+.au-user{ font-weight:800; }
+.au-muted{ font-size:12px; opacity:.75; margin-top:4px; }
+.au-mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+/* BADGES */
+.au-badge{
+  display:inline-flex;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  text-transform:capitalize;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+}
+.au-badge.user{ color:#cbd5e1; }
+.au-badge.seller{ color:#66b6ff; border-color:rgba(102,182,255,.35); }
+.au-badge.admin{ color:#ffb020; border-color:rgba(255,176,32,.35); }
+.au-badge.active{ color:#7dff7d; border-color:rgba(125,255,125,.35); }
+.au-badge.blocked{ color:#ff6b87; border-color:rgba(255,107,135,.35); }
+
+.au-select{
+  background:#070c16;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  padding:10px 12px;
+  outline:none;
+}
+
+.au-saving{
+  display:inline-block;
+  margin-left:10px;
+  font-size:12px;
+  opacity:.75;
+}

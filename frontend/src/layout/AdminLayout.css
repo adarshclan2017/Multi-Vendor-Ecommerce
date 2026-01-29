@@ -1,0 +1,13 @@
+.admin-layout {
+  display: flex;
+}
+
+/* MAIN CONTENT */
+.admin-main {
+  margin-top: 60px;      /* height of navbar */
+  margin-left: 220px;   /* width of sidebar */
+  padding: 20px;
+  width: calc(100% - 220px);
+  min-height: 100vh;
+  background: #f5f6fa;
+}

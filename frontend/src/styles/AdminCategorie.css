@@ -1,0 +1,238 @@
+.ac-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.ac-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.ac-sub {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Add */
+.ac-add {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0 20px;
+}
+
+.ac-add input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  outline: none;
+}
+
+.ac-add input:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08);
+}
+
+.ac-add button {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  background: #111827;
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ac-add button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Table */
+.ac-tableWrap {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 14px 40px rgba(17, 24, 39, 0.06);
+  overflow: hidden;
+}
+
+.ac-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ac-table thead {
+  background: #f9fafb;
+}
+
+.ac-table th {
+  text-align: left;
+  padding: 14px;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 800;
+}
+
+.ac-table td {
+  padding: 14px;
+  border-top: 1px solid #eef2f7;
+  font-size: 14px;
+  color: #111827;
+}
+
+.ac-name {
+  font-weight: 700;
+}
+
+/* Status pill */
+.ac-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.ac-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ac-status.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Actions */
+.ac-actions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ac-actionBtn {
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ac-actionBtn:hover {
+  background: #f9fafb;
+}
+
+.ac-actionBtn.ok {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.ac-actionBtn.warn {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.ac-actionBtn.danger {
+  border-color: #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Empty */
+.ac-empty {
+  padding: 40px;
+  text-align: center;
+  color: #6b7280;
+  border: 1px dashed #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+/* Modal */
+.ac-modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+}
+
+.ac-modal {
+  width: min(520px, 100%);
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  padding: 18px;
+}
+
+.ac-modal h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.ac-modalField {
+  margin-bottom: 12px;
+}
+
+.ac-modalField label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+}
+
+.ac-modalField input,
+.ac-modalField select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+
+.ac-modalField input:focus,
+.ac-modalField select:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08);
+}
+
+.ac-modalBtns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ac-save {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #111827;
+  color: #ffffff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ac-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
