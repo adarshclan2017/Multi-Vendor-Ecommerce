@@ -66,11 +66,11 @@ function Home() {
         </div>
 
         {/* ✅ Modern category dropdown only */}
-        <div className="container-fluid mb-4">
-          <div style={{ maxWidth: 420, margin: "0 auto" }}>
-            <label style={{ fontWeight: 800, marginBottom: 8, display: "block" }}>
+        <div className="container-fluid mb-4 d-flex ">
+          <div style={{ maxWidth: 420}} className="d-flex  align-items-center gap-4 ">
+            <div style={{ fontWeight: 800, marginBottom: 8, display: "block" }}>
               Category
-            </label>
+            </div>
 
             <select
               value={cat}

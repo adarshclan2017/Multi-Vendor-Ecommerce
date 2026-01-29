@@ -1,49 +1,166 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../styles/AdminDashboard.css";
-import { getAdminStats } from "../../api/adminApi";
+import { Link } from "react-router-dom";
+import { getAdminStats, getAdminOrders } from "../../api/adminApi";
 
-function AdminDashboard() {
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalUsers: 0,
-    totalRevenue: 0,
-  });
+const money = (n) => `₹ ${Number(n || 0).toLocaleString("en-IN")}`;
 
-  const loadStats = async () => {
+const badgeClass = (status) => {
+  const s = String(status || "").toLowerCase();
+  if (s === "delivered") return "ad-badge delivered";
+  if (s === "shipped") return "ad-badge shipped";
+  if (s === "cancelled") return "ad-badge cancelled";
+  return "ad-badge pending";
+};
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState({ totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
+  const [orders, setOrders] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
+  const load = async () => {
     try {
+      setLoadingStats(true);
       const res = await getAdminStats();
-      setStats(res.data);
-    } catch (err) {
-      console.log("❌ admin dashboard error:", err);
+      setStats(res.data || { totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
+    } catch (e) {
+      console.log("❌ stats error:", e.response?.data || e);
+    } finally {
+      setLoadingStats(false);
+    }
+
+    try {
+      setLoadingOrders(true);
+      const res = await getAdminOrders();
+      setOrders(res.data?.orders || []);
+    } catch (e) {
+      console.log("❌ orders error:", e.response?.data || e);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
   useEffect(() => {
-    loadStats();
+    load();
   }, []);
 
+  const recent = useMemo(() => {
+    return [...(orders || [])].slice(0, 6);
+  }, [orders]);
+
   return (
-    <div className="admin-dashboard">
-      <h2>Admin Dashboard</h2>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <p>Total Orders</p>
-          <h3>{stats.totalOrders}</h3>
+    <div className="ad-page">
+      <div className="ad-head">
+        <div>
+          <h2 className="ad-title">Admin Dashboard</h2>
+          <p className="ad-sub">Overview of your store performance</p>
         </div>
 
-        <div className="stat-card">
-          <p>Total Users</p>
-          <h3>{stats.totalUsers}</h3>
+        <button className="ad-btn" onClick={load} disabled={loadingStats || loadingOrders}>
+          {loadingStats || loadingOrders ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {/* Stats cards */}
+      <div className="ad-cards">
+        <div className="ad-card">
+          <div className="ad-cardTop">
+            <span className="ad-label">Total Orders</span>
+            <span className="ad-dot" />
+          </div>
+          <div className="ad-value">{loadingStats ? "…" : stats.totalOrders}</div>
+          <div className="ad-mini">All time orders placed</div>
         </div>
 
-        <div className="stat-card">
-          <p>Total Revenue</p>
-          <h3>₹ {stats.totalRevenue}</h3>
+        <div className="ad-card">
+          <div className="ad-cardTop">
+            <span className="ad-label">Total Users</span>
+            <span className="ad-dot" />
+          </div>
+          <div className="ad-value">{loadingStats ? "…" : stats.totalUsers}</div>
+          <div className="ad-mini">Registered customers + sellers</div>
         </div>
+
+        <div className="ad-card">
+          <div className="ad-cardTop">
+            <span className="ad-label">Total Revenue</span>
+            <span className="ad-dot" />
+          </div>
+          <div className="ad-value">{loadingStats ? "…" : money(stats.totalRevenue)}</div>
+          <div className="ad-mini">Based on total order amount</div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="ad-actions">
+        <Link to="/admin/product" className="ad-linkCard">
+          <div className="ad-linkTitle">Products</div>
+          <div className="ad-linkSub">Manage products & stock</div>
+        </Link>
+
+        <Link to="/admin/order" className="ad-linkCard">
+          <div className="ad-linkTitle">Orders</div>
+          <div className="ad-linkSub">Update status & view details</div>
+        </Link>
+
+        <Link to="/admin/user" className="ad-linkCard">
+          <div className="ad-linkTitle">Users</div>
+          <div className="ad-linkSub">Roles, status, and control</div>
+        </Link>
+
+        <Link to="/admin/categorie" className="ad-linkCard">
+          <div className="ad-linkTitle">Categories</div>
+          <div className="ad-linkSub">Enable/disable categories</div>
+        </Link>
+      </div>
+
+      {/* Recent Orders */}
+      <div className="ad-panel">
+        <div className="ad-panelHead">
+          <h3>Recent Orders</h3>
+          <Link className="ad-viewAll" to="/admin/order">
+            View all →
+          </Link>
+        </div>
+
+        {loadingOrders ? (
+          <div className="ad-empty">Loading orders...</div>
+        ) : recent.length === 0 ? (
+          <div className="ad-empty">No orders found.</div>
+        ) : (
+          <div className="ad-tableWrap">
+            <table className="ad-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>User</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: "right" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map((o) => (
+                  <tr key={o._id}>
+                    <td className="ad-mono">{o._id}</td>
+                    <td>{o?.user?.name || "—"}</td>
+                    <td className="ad-strong">{money(o.total)}</td>
+                    <td>
+                      <span className={badgeClass(o.status)}>{o.status || "pending"}</span>
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      <Link className="ad-rowBtn" to={`/admin/order/${o._id}`}>
+                        Details
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-export default AdminDashboard;

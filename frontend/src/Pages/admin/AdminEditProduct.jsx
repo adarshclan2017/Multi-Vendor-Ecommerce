@@ -17,7 +17,7 @@ export default function AdminEditProduct() {
     name: "",
     price: "",
     stock: "",
-    category: "",
+    category: "", // ✅ must store categoryId
     description: "",
     image: "",
   });
@@ -34,8 +34,10 @@ export default function AdminEditProduct() {
     }
   };
 
+  // ✅ Image preview (file > server image)
   const imagePreview = useMemo(() => {
     if (imageFile) return URL.createObjectURL(imageFile);
+
     if (form.image) {
       if (String(form.image).startsWith("http")) return form.image;
       return `http://localhost:5000${form.image}`;
@@ -43,6 +45,14 @@ export default function AdminEditProduct() {
     return "";
   }, [imageFile, form.image]);
 
+  // ✅ Clean up created object URL (avoid memory leak)
+  useEffect(() => {
+    if (!imageFile) return;
+    const url = URL.createObjectURL(imageFile);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  // ✅ Load product
   const loadProduct = async () => {
     try {
       setLoading(true);
@@ -55,11 +65,15 @@ export default function AdminEditProduct() {
         return;
       }
 
+      // ✅ convert category to id always (handles populated object OR string id)
+      const categoryId =
+        typeof p.category === "object" ? p.category?._id || "" : p.category || "";
+
       setForm({
         name: p.name || "",
         price: p.price ?? "",
         stock: p.stock ?? "",
-        category: p.category || "",
+        category: categoryId,
         description: p.description || "",
         image: p.image || "",
       });
@@ -85,21 +99,38 @@ export default function AdminEditProduct() {
 
   const onChange = (e) => {
     const { name, value } = e.target;
+
+    // small safety for number fields (optional)
+    if (name === "price" || name === "stock") {
+      setForm((p) => ({ ...p, [name]: value }));
+      return;
+    }
+
     setForm((p) => ({ ...p, [name]: value }));
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ basic validation
+    if (!form.category) {
+      alert("Please select a category");
+      return;
+    }
+
     try {
       setSaving(true);
 
       const fd = new FormData();
-      fd.append("name", form.name);
-      fd.append("price", form.price);
-      fd.append("stock", form.stock);
-      fd.append("category", form.category); // ✅ dropdown value
-      fd.append("description", form.description);
+      fd.append("name", form.name.trim());
+      fd.append("price", String(form.price));
+      fd.append("stock", String(form.stock));
+      fd.append("category", form.category); // ✅ MUST BE categoryId (_id)
+      fd.append("description", form.description || "");
       if (imageFile) fd.append("image", imageFile);
+
+      // debug once if needed:
+      // console.log("Sending category:", form.category);
 
       await updateAdminProduct(id, fd);
 
@@ -143,7 +174,7 @@ export default function AdminEditProduct() {
               />
             </div>
 
-            {/* ✅ CATEGORY DROPDOWN */}
+            {/* ✅ CATEGORY DROPDOWN (FIXED) */}
             <div className="aep-field">
               <label>Category *</label>
 
@@ -166,10 +197,12 @@ export default function AdminEditProduct() {
                   }}
                 >
                   <option value="">Select category</option>
+
                   {categories
-                    .filter((c) => c.status === "active")
+                    .filter((c) => String(c.status).toLowerCase() === "active")
                     .map((c) => (
-                      <option key={c._id} value={c.name}>
+                      // ✅ value must be _id
+                      <option key={c._id} value={c._id}>
                         {c.name}
                       </option>
                     ))}
@@ -199,6 +232,7 @@ export default function AdminEditProduct() {
                 value={form.price}
                 onChange={onChange}
                 required
+                min="0"
               />
             </div>
 
@@ -210,6 +244,7 @@ export default function AdminEditProduct() {
                 value={form.stock}
                 onChange={onChange}
                 required
+                min="0"
               />
             </div>
 

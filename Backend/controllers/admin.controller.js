@@ -157,6 +157,7 @@ exports.updateAdminUser = async (req, res) => {
 exports.getAdminProducts = async (req, res) => {
   try {
     const products = await Product.find()
+      .populate("category", "name status")   // ✅ THIS is the fix
       .populate("seller", "name email")
       .sort({ createdAt: -1 });
 
@@ -166,6 +167,7 @@ exports.getAdminProducts = async (req, res) => {
     res.status(500).json({ message: "Failed to load products" });
   }
 };
+
 
 // ✅ GET PRODUCT BY ID (Admin)
 exports.getAdminProductById = async (req, res) => {

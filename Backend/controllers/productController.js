@@ -20,20 +20,27 @@ const resolveCategoryId = async (categoryValue) => {
 // PUBLIC
 // =========================
 
-// Public: all products
+// Public: all products (ONLY active categories)
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find()
-      .populate("seller", "name email role")
+      .populate("seller", "name email")
       .populate("category", "name status")
       .sort({ createdAt: -1 });
 
-    res.json(products);
+    // ✅ Hide products whose category is inactive
+    const filtered = products.filter((p) => {
+      // show if no category OR category is active
+      if (!p.category) return true;
+      return p.category.status === "active";
+    });
+
+    res.json(filtered);
   } catch (err) {
-    console.log("❌ getProducts error:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 // Public: single product
 exports.getProductById = async (req, res) => {

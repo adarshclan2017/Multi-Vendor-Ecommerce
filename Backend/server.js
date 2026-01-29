@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
+const adminSettingsRoutes = require("./routes/adminSettingsRoutes");
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/admin/categories", require("./routes/adminCategoryRoutes"));
 
 app.use("/api/categories", require("./routes/categoryRoutes"));
+app.use("/api/admin/settings", adminSettingsRoutes); // ✅ add this
 
 
 

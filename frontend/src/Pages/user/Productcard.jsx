@@ -25,7 +25,6 @@ function Productcard({ Product }) {
 
     try {
       await addToCart(Product._id, 1);
-      alert("Added to cart ✅");
     } catch (err) {
       console.error("❌ Add to cart error:", err);
       alert(err.response?.data?.message || "Add to cart failed");
@@ -35,7 +34,7 @@ function Productcard({ Product }) {
   const outOfStock = Number(Product?.stock) <= 0;
 
   return (
-    <div className="col">
+    <div className="col mb-5">
       <div className="pc-card">
         <Link to={`/product/${Product?._id}`} className="pc-media">
           <img className="pc-img" src={imageUrl} alt={Product?.name || "Product"} />
