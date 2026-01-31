@@ -1,62 +1,68 @@
 /* Card wrapper */
 .pc-card {
-  background: #0f1115;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: #fff;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
-
 .pc-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
-/* Image area */
+/* Image wrapper */
 .pc-media {
-  display: block;
+  width: 100%;
+  height: 260px; /* control image area height */
+  background: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   position: relative;
-  text-decoration: none;
-  background: #11131a;
 }
 
+/* ✅ FULL IMAGE (no crop) */
 .pc-img {
   width: 100%;
-  height: 220px;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.25s ease;
+  height: 100%;
+  object-fit: contain;  /* <-- IMPORTANT */
+  background: #fff;
 }
 
 .pc-card:hover .pc-img {
   transform: scale(1.04);
 }
 
-/* Badge */
+/* Stock badge */
 .pc-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
   font-size: 12px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
+  border-radius: 6px;
+  color: white;
 }
 
 .pc-badge--ok {
-  background: rgba(16, 185, 129, 0.18);
+  background: #2ecc71;
 }
 
 .pc-badge--danger {
-  background: rgba(239, 68, 68, 0.18);
+  background: #e74c3c;
 }
-
 /* Body */
 .pc-body {
-  padding: 14px 14px 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
 }
 
 .pc-top {
@@ -149,4 +155,51 @@
   .pc-btn--ghost {
     width: 80px;
   }
+}
+
+.pc-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pc-cat {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-ratingRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+}
+.pc-rev{
+  font-size:12px;
+  font-weight:800;
+  color:#6b7280;
+}
+
+.pc-title {
+  color: #000;
+  font-weight: 600;
+}
+
+.pc-price {
+  color: #000;
+  font-weight: 700;
+}
+
+.pc-cat {
+  color: #000;
+}
+
+.pc-rev {
+  color: #000;
 }

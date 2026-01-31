@@ -37,6 +37,7 @@ import AdminAddCategorie from "../Pages/admin/AdminAddCategorie";
 import AdminEditProduct from "../Pages/admin/AdminEditProduct";
 import AdminViewUser from "../Pages/admin/AdminViewUser";
 import AdminOrderDetails from "../Pages/admin/AdminOrderDetails";
+import ProductDetails from "../Pages/user/ProductDetails";
 
 
 
@@ -52,6 +53,8 @@ const router = createBrowserRouter([
             { index: true, element: <Home /> },
             { path: 'cart', element: <Productcart /> },
             { path: 'order', element: < MyOrders /> },
+            { path: "product/:id", element: <ProductDetails /> },
+
             { path: 'order/:id', element: <OrderDetails /> },
             { path: 'slideshow', element: <Slideshow /> },
             { path: 'checkout', element: <CheckoutChecklist /> },

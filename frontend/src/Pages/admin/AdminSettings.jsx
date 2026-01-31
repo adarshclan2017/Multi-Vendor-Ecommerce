@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../styles/AdminSettings.css";
-
-const LS_KEY = "admin_settings_v1";
+import { getAdminSettings, updateAdminSettings } from "../../api/adminSettingsApi";
 
 const defaults = {
   storeName: "PowerHouse Ecommerce",
@@ -9,36 +8,49 @@ const defaults = {
   supportPhone: "+91 90000 00000",
   currency: "INR",
   maintenanceMode: false,
-  hideInactiveCategoryProducts: true,
 };
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState(defaults);
+  const [initial, setInitial] = useState(defaults);
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        setSettings((p) => ({ ...p, ...data }));
-      }
-    } catch (e) {
-      console.log("❌ settings load error:", e);
-    }
-  }, []);
+  const changed = useMemo(
+    () => JSON.stringify(settings) !== JSON.stringify(initial),
+    [settings, initial]
+  );
 
-  const changed = useMemo(() => {
+  const load = async () => {
     try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (!raw) return true;
-      const saved = JSON.parse(raw);
-      return JSON.stringify({ ...defaults, ...saved }) !== JSON.stringify(settings);
-    } catch {
-      return true;
+      setLoading(true);
+      const res = await getAdminSettings();
+      const s = res.data?.settings || defaults;
+
+      const clean = {
+        storeName: s.storeName ?? defaults.storeName,
+        supportEmail: s.supportEmail ?? defaults.supportEmail,
+        supportPhone: s.supportPhone ?? defaults.supportPhone,
+        currency: s.currency ?? defaults.currency,
+        maintenanceMode: Boolean(s.maintenanceMode ?? defaults.maintenanceMode),
+      };
+
+      setSettings(clean);
+      setInitial(clean);
+    } catch (err) {
+      console.log("❌ settings load error:", err.response?.data || err);
+      setToast(err.response?.data?.message || "Failed to load settings");
+      setTimeout(() => setToast(""), 2000);
+    } finally {
+      setLoading(false);
     }
-  }, [settings]);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -51,24 +63,38 @@ export default function AdminSettings() {
   const save = async () => {
     try {
       setSaving(true);
-      localStorage.setItem(LS_KEY, JSON.stringify(settings));
+
+      const payload = {
+        storeName: settings.storeName,
+        supportEmail: settings.supportEmail,
+        supportPhone: settings.supportPhone,
+        currency: settings.currency,
+        maintenanceMode: Boolean(settings.maintenanceMode),
+      };
+
+      const res = await updateAdminSettings(payload);
+      const s = res.data?.settings || payload;
+
+      const clean = {
+        storeName: s.storeName ?? defaults.storeName,
+        supportEmail: s.supportEmail ?? defaults.supportEmail,
+        supportPhone: s.supportPhone ?? defaults.supportPhone,
+        currency: s.currency ?? defaults.currency,
+        maintenanceMode: Boolean(s.maintenanceMode ?? defaults.maintenanceMode),
+      };
+
+      setSettings(clean);
+      setInitial(clean);
+
       setToast("Saved ✅");
       setTimeout(() => setToast(""), 1500);
-    } catch (e) {
-      console.log("❌ save error:", e);
-      setToast("Save failed ❌");
+    } catch (err) {
+      console.log("❌ save settings error:", err.response?.data || err);
+      setToast(err.response?.data?.message || "Save failed ❌");
       setTimeout(() => setToast(""), 2000);
     } finally {
       setSaving(false);
     }
-  };
-
-  const reset = () => {
-    if (!window.confirm("Reset settings to default?")) return;
-    localStorage.removeItem(LS_KEY);
-    setSettings(defaults);
-    setToast("Reset ✅");
-    setTimeout(() => setToast(""), 1500);
   };
 
   return (
@@ -76,122 +102,86 @@ export default function AdminSettings() {
       <div className="as-head">
         <div>
           <h2 className="as-title">Admin Settings</h2>
-          <p className="as-sub">Store preferences and system options</p>
+          <p className="as-sub">Control store rules & global preferences</p>
         </div>
 
-        <div className="as-headBtns">
-          <button className="as-btn ghost" onClick={reset} disabled={saving}>
-            Reset
-          </button>
-          <button
-            className="as-btn primary"
-            onClick={save}
-            disabled={saving || !changed}
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
+        <button
+          className="as-btn primary"
+          disabled={!changed || saving || loading}
+          onClick={save}
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
       </div>
 
       {toast ? <div className="as-toast">{toast}</div> : null}
 
-      <div className="as-grid">
-        {/* Store Profile */}
-        <section className="as-card">
-          <div className="as-cardHead">
-            <h3>Store Profile</h3>
-            <p>Basic store information</p>
-          </div>
-
-          <div className="as-form">
-            <div className="as-field">
-              <label>Store Name</label>
-              <input
-                name="storeName"
-                value={settings.storeName}
-                onChange={onChange}
-                placeholder="Enter store name"
-              />
+      {loading ? (
+        <div className="as-loading">Loading settings...</div>
+      ) : (
+        <div className="as-grid">
+          {/* Store Info */}
+          <section className="as-card">
+            <div className="as-cardHead">
+              <h3>Store Info</h3>
+              <p>Shown in header / footer</p>
             </div>
 
-            <div className="as-row">
+            <div className="as-form">
               <div className="as-field">
-                <label>Support Email</label>
-                <input
-                  name="supportEmail"
-                  value={settings.supportEmail}
-                  onChange={onChange}
-                  placeholder="support@yourstore.com"
-                />
+                <label>Store Name</label>
+                <input name="storeName" value={settings.storeName} onChange={onChange} />
+              </div>
+
+              <div className="as-row">
+                <div className="as-field">
+                  <label>Support Email</label>
+                  <input name="supportEmail" value={settings.supportEmail} onChange={onChange} />
+                </div>
+
+                <div className="as-field">
+                  <label>Support Phone</label>
+                  <input name="supportPhone" value={settings.supportPhone} onChange={onChange} />
+                </div>
               </div>
 
               <div className="as-field">
-                <label>Support Phone</label>
+                <label>Currency</label>
+                <select name="currency" value={settings.currency} onChange={onChange}>
+                  <option value="INR">INR (₹)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="GBP">GBP (£)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          {/* Maintenance Mode */}
+          <section className="as-card">
+            <div className="as-cardHead">
+              <h3>System Controls</h3>
+              <p>Enable/disable global behaviors</p>
+            </div>
+
+            <div className="as-form">
+              <label className="as-switch">
+                <div className="as-switchText">
+                  <span>Maintenance Mode</span>
+                  <small>Disable store browsing for users</small>
+                </div>
                 <input
-                  name="supportPhone"
-                  value={settings.supportPhone}
+                  type="checkbox"
+                  name="maintenanceMode"
+                  checked={settings.maintenanceMode}
                   onChange={onChange}
-                  placeholder="+91 90000 00000"
                 />
-              </div>
+                <span className="as-slider" />
+              </label>
             </div>
-
-            <div className="as-field">
-              <label>Currency</label>
-              <select name="currency" value={settings.currency} onChange={onChange}>
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* System Controls */}
-        <section className="as-card">
-          <div className="as-cardHead">
-            <h3>System Controls</h3>
-            <p>Enable/disable system-level options</p>
-          </div>
-
-          <div className="as-form">
-            <label className="as-switch">
-              <div className="as-switchText">
-                <span>Maintenance Mode</span>
-                <small>Temporarily disable store for users</small>
-              </div>
-              <input
-                type="checkbox"
-                name="maintenanceMode"
-                checked={settings.maintenanceMode}
-                onChange={onChange}
-              />
-              <span className="as-slider" />
-            </label>
-
-            <label className="as-switch">
-              <div className="as-switchText">
-                <span>Hide inactive category products</span>
-                <small>If category is inactive, user won't see those products</small>
-              </div>
-              <input
-                type="checkbox"
-                name="hideInactiveCategoryProducts"
-                checked={settings.hideInactiveCategoryProducts}
-                onChange={onChange}
-              />
-              <span className="as-slider" />
-            </label>
-
-            <div className="as-note">
-              <b>Note:</b> Settings are saved in{" "}
-              <span className="as-mono">localStorage</span> for now.
-              If you want, I can connect this to MongoDB using an API.
-            </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

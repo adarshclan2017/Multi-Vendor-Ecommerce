@@ -56,10 +56,6 @@ export default function AdminAddProduct() {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.category) {
-      alert("Please select a category");
-      return;
-    }
 
     try {
       setSaving(true);
@@ -74,11 +70,10 @@ export default function AdminAddProduct() {
 
       await createAdminProduct(fd);
 
-      alert("Product added ✅");
       nav("/admin/product");
     } catch (err) {
       console.log("❌ add product error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to add product");
+     
     } finally {
       setSaving(false);
     }

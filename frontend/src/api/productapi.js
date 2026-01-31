@@ -32,3 +32,6 @@ export const getProductById = (id) => API.get(`/products/${id}`);
 // ✅ DELETE
 export const deleteProduct = (id) => API.delete(`/products/${id}`);
 
+export const addReview = (id, data) => API.post(`/products/${id}/reviews`, data);
+
+

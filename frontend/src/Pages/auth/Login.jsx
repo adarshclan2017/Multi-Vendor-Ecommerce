@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./Login.module.css";
 import { loginuser } from "../../api/authapi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // ✅ add Link
 
 function Login() {
   const navigate = useNavigate();
@@ -46,41 +46,35 @@ function Login() {
     try {
       const res = await loginuser(formdata);
 
-      // ✅ token
       const token = res.data?.token;
 
-      // ✅ user (support many backend formats)
       const user =
         res.data?.user ||
         (res.data?._id
           ? {
-              _id: res.data._id,
-              name: res.data.name,
-              email: res.data.email,
-              role: res.data.role,
-            }
+            _id: res.data._id,
+            name: res.data.name,
+            email: res.data.email,
+            role: res.data.role,
+          }
           : null);
 
       if (!token) {
         console.log("❌ token missing:", res.data);
-        return alert("Login failed: token missing");
+        return setErrors({ message: res.data?.message || "token not found" });
       }
 
       localStorage.setItem("token", token);
-
       if (user) localStorage.setItem("user", JSON.stringify(user));
-
-      alert("Login successful ✅");
       console.log("✅ Login response:", res.data);
 
-      // ✅ redirect by role
       const role = user?.role || res.data?.role;
       if (role === "admin") return navigate("/admin", { replace: true });
       if (role === "seller") return navigate("/seller", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
       console.log("❌ login error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Login failed");
+      setErrors({ message: err.response?.data?.message });
     }
   };
 
@@ -117,12 +111,21 @@ function Login() {
               {errors.password && <p className="error">{errors.password}</p>}
             </div>
 
+              {errors.message && <p className="error text-danger">{errors.message}</p>}
             <button
               type="submit"
               className="btn btn-primary w-50 mx-auto d-block"
             >
               Login
             </button>
+
+            {/* ✅ Register link */}
+            <p className="text-center mt-3 mb-0">
+              Don&apos;t have an account?{" "}
+              <Link to="/reg" className="fw-bold text-decoration-none">
+                Register
+              </Link>
+            </p>
           </form>
         </div>
       </div>

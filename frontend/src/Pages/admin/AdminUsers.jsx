@@ -31,7 +31,6 @@ function AdminUsers() {
       setUsers(res.data?.users || []);
     } catch (err) {
       console.log("❌ admin users error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
@@ -66,7 +65,6 @@ function AdminUsers() {
       );
     } catch (err) {
       console.log("❌ update user error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to update user");
     } finally {
       setSavingId("");
     }

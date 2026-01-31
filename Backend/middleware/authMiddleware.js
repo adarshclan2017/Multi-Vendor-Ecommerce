@@ -2,26 +2,28 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User"); // change path if your model differs
 
 // ✅ Protect routes (Bearer token)
+// middleware/auth.js
+
 const protect = async (req, res, next) => {
-  try {
-    const auth = req.headers.authorization;
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ message: "No token" });
 
-    if (!auth || !auth.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Not authorized, no token" });
-    }
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const token = auth.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(decoded.id).select("-password");
+  if (!user) return res.status(401).json({ message: "User not found" });
 
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user) return res.status(401).json({ message: "User not found" });
-
-    req.user = user;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: "Not authorized, token failed" });
+  // ✅ BLOCK CHECK HERE ALSO
+  if (user.status === "blocked") {
+    return res.status(403).json({
+      message: "Account blocked by admin",
+    });
   }
+
+  req.user = user;
+  next();
 };
+
 
 // ✅ Admin only (use this in admin routes)
 const adminOnly = (req, res, next) => {

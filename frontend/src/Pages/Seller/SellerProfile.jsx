@@ -15,7 +15,7 @@ function SellerProfile() {
       setMe(res.data?.user || null);
     } catch (err) {
       console.log("❌ profile error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load profile");
+    
     } finally {
       setLoading(false);
     }
@@ -28,7 +28,7 @@ function SellerProfile() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    alert("Logged out ✅");
+    
     navigate("/login");
   };
 

@@ -25,7 +25,7 @@ export default function AdminCategorie() {
       setCategories(res.data?.categories || []);
     } catch (err) {
       console.log("❌ load categories error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load categories");
+     
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,6 @@ export default function AdminCategorie() {
       load();
     } catch (err) {
       console.log("❌ add category error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to add category");
     } finally {
       setAdding(false);
     }
@@ -65,7 +64,7 @@ export default function AdminCategorie() {
       setCategories((prev) => prev.filter((c) => c._id !== id));
     } catch (err) {
       console.log("❌ delete category error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Delete failed");
+     
     }
   };
 
@@ -79,7 +78,6 @@ export default function AdminCategorie() {
       await updateAdminCategory(cat._id, { status: next });
     } catch (err) {
       console.log("❌ toggle status error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to update status");
       load(); // revert
     }
   };
@@ -100,7 +98,7 @@ export default function AdminCategorie() {
       load();
     } catch (err) {
       console.log("❌ edit save error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to update category");
+     
     } finally {
       setSavingEdit(false);
     }

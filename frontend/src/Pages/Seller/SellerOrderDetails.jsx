@@ -65,7 +65,7 @@ function SellerOrderDetails() {
       load();
     } catch (err) {
       console.log("❌ update status:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to update status");
+     
     }
   };
 

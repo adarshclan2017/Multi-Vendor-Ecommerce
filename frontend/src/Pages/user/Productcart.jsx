@@ -12,6 +12,7 @@ function Productcart() {
   const navigate = useNavigate();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({})
 
   const loadCart = async () => {
     try {
@@ -24,7 +25,7 @@ function Productcart() {
         localStorage.removeItem("user");
         navigate("/login", { replace: true });
       } else {
-        alert(err.response?.data?.message || "Failed to load cart");
+        console.log(err.response?.data?.message || "Failed to load cart");
       }
     } finally {
       setLoading(false);
@@ -57,7 +58,7 @@ function Productcart() {
       const res = await updateCartItem(productId, qty);
       setCart(res.data);
     } catch (err) {
-      alert(err.response?.data?.message || "Update failed");
+      setErrors({message:err.response?.data?.message || "Update failed"});
     }
   };
 
@@ -66,7 +67,7 @@ function Productcart() {
       const res = await removeCartItem(productId);
       setCart(res.data);
     } catch (err) {
-      alert(err.response?.data?.message || "Remove failed");
+     setErrors({message:err.response?.data?.message || "Remove failed"});
     }
   };
 
@@ -76,7 +77,7 @@ function Productcart() {
       await clearCart();
       await loadCart();
     } catch (err) {
-      alert(err.response?.data?.message || "Clear failed");
+     setErrors({message:err.response?.data?.message || "clear failed"});
     }
   };
 
@@ -130,9 +131,11 @@ function Productcart() {
                     </button>
                   </div>
 
+
                   <div className="line-total">
                     ₹ {Number(p?.price || 0) * it.qty}
                   </div>
+              {errors.message && <p className="error text-danger">{errors.message}</p>}
                 </div>
               );
             })}

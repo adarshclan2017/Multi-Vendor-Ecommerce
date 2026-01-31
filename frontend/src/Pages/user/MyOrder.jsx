@@ -30,7 +30,7 @@ function MyOrders() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        alert("Session expired. Please login again.");
+        console.log("Session expired. Please login again.");
         navigate("/login", { replace: true });
         return;
       }
@@ -46,7 +46,7 @@ function MyOrders() {
 
     // ✅ ONLY token check
     if (!token) {
-      alert("Please login first");
+     
       navigate("/login", { replace: true });
       return;
     }

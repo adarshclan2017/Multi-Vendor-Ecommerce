@@ -1,28 +1,346 @@
-.admin-dashboard {
-  background: #0f172a;
+/* AdminDashboard.css */
+
+.ad-page {
   min-height: 100vh;
-  padding: 20px;
-  color: white;
+  padding: 24px;
+  background: #f6f7fb;
+  color: #0f172a;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-.stats-grid {
+/* Header */
+.ad-head {
+  max-width: 1200px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ad-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.ad-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Refresh button */
+.ad-btn {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: 0.2s ease;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+}
+
+.ad-btn:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.1);
+}
+
+.ad-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Cards */
+.ad-cards {
+  max-width: 1200px;
+  margin: 0 auto 18px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
 }
 
-.stat-card {
-  background: #020617;
-  padding: 20px;
-  border-radius: 14px;
+.ad-card {
+  grid-column: span 4;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+  min-height: 130px; /* equal size */
+  transition: 0.2s;
 }
 
-.stat-card p {
-  opacity: 0.7;
+.ad-card:hover {
+  transform: translateY(-2px);
+  border-color: #dbeafe;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
 }
 
-.stat-card h3 {
-  margin-top: 8px;
+.ad-cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ad-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.ad-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #111827;
+  opacity: 0.15;
+}
+
+.ad-value {
+  margin-top: 10px;
   font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.ad-mini {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Quick actions */
+.ad-actions {
+  max-width: 1200px;
+  margin: 0 auto 18px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+}
+
+.ad-linkCard {
+  grid-column: span 3;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 14px;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+  transition: 0.2s ease;
+  min-height: 92px;
+}
+
+.ad-linkCard:hover {
+  transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
+}
+
+.ad-linkTitle {
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.ad-linkSub {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.ad-linkArrow {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  font-weight: 900;
+  color: #94a3b8;
+}
+
+/* Panel */
+.ad-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.ad-panelHead {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.ad-panelHead h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.ad-viewAll {
+  text-decoration: none;
+  font-weight: 800;
+  color: #1d4ed8;
+}
+
+.ad-viewAll:hover {
+  text-decoration: underline;
+}
+
+.ad-empty {
+  padding: 22px 16px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 700;
+}
+
+/* Table */
+.ad-tableWrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.ad-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.ad-table thead th {
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 12px 14px;
+  background: #fafafa;
+  border-bottom: 1px solid #eef2f7;
+  font-weight: 900;
+}
+
+.ad-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.ad-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+.ad-right {
+  text-align: right;
+}
+
+.ad-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 12px;
+  color: #334155;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ad-strong {
+  font-weight: 900;
+}
+
+/* Badges */
+.ad-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.ad-badge.pending {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+.ad-badge.shipped {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.ad-badge.delivered {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.ad-badge.cancelled {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+/* Row action button */
+.ad-rowBtn {
+  display: inline-block;
+  text-decoration: none;
+  font-weight: 900;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #111827;
+  color: #fff;
+  transition: 0.2s;
+}
+
+.ad-rowBtn:hover {
+  background: #1f2937;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .ad-card {
+    grid-column: span 6;
+  }
+  .ad-linkCard {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 640px) {
+  .ad-page {
+    padding: 16px;
+  }
+
+  .ad-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ad-btn {
+    width: 100%;
+  }
+
+  .ad-card,
+  .ad-linkCard {
+    grid-column: span 12;
+  }
 }

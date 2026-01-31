@@ -6,7 +6,11 @@ import { getAdminOrders, updateAdminOrderStatus } from "../../api/adminApi";
 const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
-  return dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return dt.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
 const money = (n) => `₹ ${Number(n || 0).toLocaleString("en-IN")}`;
@@ -19,7 +23,7 @@ const badgeClass = (s) => {
   return "ao-badge pending";
 };
 
-function AdminOrders() {
+export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
@@ -34,7 +38,7 @@ function AdminOrders() {
       setOrders(res.data?.orders || []);
     } catch (err) {
       console.log("❌ admin orders error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load admin orders");
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -46,8 +50,13 @@ function AdminOrders() {
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
+
     return (orders || [])
-      .filter((o) => (status === "all" ? true : String(o?.status || "").toLowerCase() === status))
+      .filter((o) =>
+        status === "all"
+          ? true
+          : String(o?.status || "").toLowerCase() === status
+      )
       .filter((o) => {
         if (!query) return true;
         const id = String(o?._id || "").toLowerCase();
@@ -58,10 +67,16 @@ function AdminOrders() {
   }, [orders, q, status]);
 
   const changeStatus = async (orderId, next) => {
+    if (!orderId || !next) return;
+
     try {
       setSavingId(orderId);
       await updateAdminOrderStatus(orderId, next);
-      setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, status: next } : o)));
+
+      // instant UI update
+      setOrders((prev) =>
+        prev.map((o) => (o._id === orderId ? { ...o, status: next } : o))
+      );
     } catch (err) {
       console.log("❌ update order status error:", err.response?.data || err);
       alert(err.response?.data?.message || "Failed to update status");
@@ -72,6 +87,7 @@ function AdminOrders() {
 
   return (
     <div className="ao-page">
+      {/* Header */}
       <div className="ao-head">
         <div>
           <h2 className="ao-title">Orders</h2>
@@ -83,6 +99,7 @@ function AdminOrders() {
         </button>
       </div>
 
+      {/* Controls */}
       <div className="ao-controls">
         <div className="ao-search">
           <span className="ao-ico">⌕</span>
@@ -105,6 +122,7 @@ function AdminOrders() {
         </div>
       </div>
 
+      {/* Body */}
       {loading ? (
         <div className="ao-empty">Loading orders...</div>
       ) : filtered.length === 0 ? (
@@ -131,8 +149,6 @@ function AdminOrders() {
                     <td className="ao-mono">
                       <div className="ao-id">{o._id}</div>
                       <div className="ao-muted">{(o.items?.length || 0)} item(s)</div>
-
-                      {/* If you created AdminOrderDetails route */}
                       <Link className="ao-link" to={`/admin/order/${o._id}`}>
                         View details →
                       </Link>
@@ -148,23 +164,25 @@ function AdminOrders() {
                     <td className="ao-strong">{money(o.total)}</td>
 
                     <td>
-                      <span className={badgeClass(o.status)}>{o.status}</span>
+                      <span className={badgeClass(o.status)}>{o.status || "pending"}</span>
                     </td>
 
                     <td>
-                      <select
-                        className="ao-select"
-                        value={String(o.status || "pending").toLowerCase()}
-                        disabled={savingId === o._id}
-                        onChange={(e) => changeStatus(o._id, e.target.value)}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                      <div className="ao-updateWrap">
+                        <select
+                          className="ao-select"
+                          value={String(o.status || "pending").toLowerCase()}
+                          disabled={savingId === o._id}
+                          onChange={(e) => changeStatus(o._id, e.target.value)}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
 
-                      {savingId === o._id && <span className="ao-saving">Saving…</span>}
+                        {savingId === o._id && <span className="ao-saving">Saving…</span>}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -177,8 +195,10 @@ function AdminOrders() {
             {filtered.map((o) => (
               <div className="ao-card" key={o._id}>
                 <div className="ao-cardTop">
-                  <div className="ao-mono ao-id">{o._id}</div>
-                  <span className={badgeClass(o.status)}>{o.status}</span>
+                  <div className="ao-mono ao-id" title={o._id}>
+                    {o._id}
+                  </div>
+                  <span className={badgeClass(o.status)}>{o.status || "pending"}</span>
                 </div>
 
                 <div className="ao-cardRow">
@@ -222,5 +242,3 @@ function AdminOrders() {
     </div>
   );
 }
-
-export default AdminOrders;

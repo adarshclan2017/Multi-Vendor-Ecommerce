@@ -5,11 +5,13 @@ import "../../styles/SellerAddProduct.css";
 import { createProduct } from "../../api/productapi";
 import { getPublicCategories } from "../../api/categoryApi";
 
+
 function AddProduct() {
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
   const [loadingCats, setLoadingCats] = useState(true);
+  const [errors,setErrors] =useState({})
 
   const [saving, setSaving] = useState(false);
 
@@ -37,7 +39,7 @@ function AddProduct() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first");
+      
       navigate("/login");
     }
   }, [navigate]);
@@ -73,13 +75,13 @@ function AddProduct() {
     console.log("✅ Token on AddProduct:", token);
 
     if (!token) {
-      alert("Token missing. Please login again.");
+     
       navigate("/login");
       return;
     }
 
     if (!product.category) {
-      alert("Please select a category");
+    
       return;
     }
 
@@ -97,7 +99,7 @@ function AddProduct() {
       const res = await createProduct(fd);
 
       console.log("✅ Saved product:", res.data);
-      alert("Product added successfully!");
+      
 
       // reset state + UI
       setProduct({
@@ -111,7 +113,7 @@ function AddProduct() {
       e.target.reset();
     } catch (err) {
       console.error("❌ Add product error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Add product failed");
+      setErrors({message:err.response?.data?.message || "Add product failed"});
     } finally {
       setSaving(false);
     }
@@ -208,7 +210,7 @@ function AddProduct() {
             </div>
           </div>
         </div>
-
+{errors.message && <div className="text-danger">{errors.message}</div>}
         <button type="submit" className="sap-btn" disabled={saving}>
           {saving ? "Adding..." : "Add Product"}
         </button>

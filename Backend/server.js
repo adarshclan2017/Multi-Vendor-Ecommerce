@@ -44,7 +44,7 @@ app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/admin/categories", require("./routes/adminCategoryRoutes"));
 
 app.use("/api/categories", require("./routes/categoryRoutes"));
-app.use("/api/admin/settings", adminSettingsRoutes); // ✅ add this
+app.use("/api/admin/settings", adminSettingsRoutes);
 
 
 

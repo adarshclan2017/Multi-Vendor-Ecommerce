@@ -1,14 +1,16 @@
 const AdminSettings = require("../models/AdminSettings");
 
-// Get settings (always return one doc)
+// always keep ONE settings document
+const getOrCreate = async () => {
+  let doc = await AdminSettings.findOne();
+  if (!doc) doc = await AdminSettings.create({});
+  return doc;
+};
+
+// ✅ GET settings
 exports.getAdminSettings = async (req, res) => {
   try {
-    let settings = await AdminSettings.findOne();
-
-    if (!settings) {
-      settings = await AdminSettings.create({});
-    }
-
+    const settings = await getOrCreate();
     res.json({ settings });
   } catch (err) {
     console.log("❌ getAdminSettings error:", err);
@@ -16,32 +18,28 @@ exports.getAdminSettings = async (req, res) => {
   }
 };
 
-// Update settings
+// ✅ UPDATE settings
 exports.updateAdminSettings = async (req, res) => {
   try {
+    const settings = await getOrCreate();
+
     const allowed = [
       "storeName",
       "supportEmail",
       "supportPhone",
       "currency",
+      "taxPercent",
+      "shippingCharge",
+      "allowCOD",
       "maintenanceMode",
       "hideInactiveCategoryProducts",
     ];
 
-    const update = {};
-    for (const key of allowed) {
-      if (req.body[key] !== undefined) update[key] = req.body[key];
-    }
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) settings[key] = req.body[key];
+    });
 
-    let settings = await AdminSettings.findOne();
-
-    if (!settings) {
-      settings = await AdminSettings.create(update);
-    } else {
-      Object.assign(settings, update);
-      await settings.save();
-    }
-
+    await settings.save();
     res.json({ settings, message: "Settings updated ✅" });
   } catch (err) {
     console.log("❌ updateAdminSettings error:", err);

@@ -14,28 +14,36 @@ const badgeClass = (status) => {
 };
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalUsers: 0,
+    totalRevenue: 0,
+  });
   const [orders, setOrders] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   const load = async () => {
+    // stats
     try {
       setLoadingStats(true);
       const res = await getAdminStats();
       setStats(res.data || { totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
     } catch (e) {
       console.log("❌ stats error:", e.response?.data || e);
+      setStats({ totalOrders: 0, totalUsers: 0, totalRevenue: 0 });
     } finally {
       setLoadingStats(false);
     }
 
+    // orders
     try {
       setLoadingOrders(true);
       const res = await getAdminOrders();
       setOrders(res.data?.orders || []);
     } catch (e) {
       console.log("❌ orders error:", e.response?.data || e);
+      setOrders([]);
     } finally {
       setLoadingOrders(false);
     }
@@ -49,16 +57,19 @@ export default function AdminDashboard() {
     return [...(orders || [])].slice(0, 6);
   }, [orders]);
 
+  const refreshing = loadingStats || loadingOrders;
+
   return (
     <div className="ad-page">
+      {/* Header */}
       <div className="ad-head">
         <div>
           <h2 className="ad-title">Admin Dashboard</h2>
           <p className="ad-sub">Overview of your store performance</p>
         </div>
 
-        <button className="ad-btn" onClick={load} disabled={loadingStats || loadingOrders}>
-          {loadingStats || loadingOrders ? "Refreshing..." : "Refresh"}
+        <button className="ad-btn" onClick={load} disabled={refreshing}>
+          {refreshing ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
@@ -79,7 +90,7 @@ export default function AdminDashboard() {
             <span className="ad-dot" />
           </div>
           <div className="ad-value">{loadingStats ? "…" : stats.totalUsers}</div>
-          <div className="ad-mini">Registered customers + sellers</div>
+          <div className="ad-mini">Customers + sellers</div>
         </div>
 
         <div className="ad-card">
@@ -87,7 +98,9 @@ export default function AdminDashboard() {
             <span className="ad-label">Total Revenue</span>
             <span className="ad-dot" />
           </div>
-          <div className="ad-value">{loadingStats ? "…" : money(stats.totalRevenue)}</div>
+          <div className="ad-value">
+            {loadingStats ? "…" : money(stats.totalRevenue)}
+          </div>
           <div className="ad-mini">Based on total order amount</div>
         </div>
       </div>
@@ -97,21 +110,25 @@ export default function AdminDashboard() {
         <Link to="/admin/product" className="ad-linkCard">
           <div className="ad-linkTitle">Products</div>
           <div className="ad-linkSub">Manage products & stock</div>
+          <div className="ad-linkArrow">→</div>
         </Link>
 
         <Link to="/admin/order" className="ad-linkCard">
           <div className="ad-linkTitle">Orders</div>
           <div className="ad-linkSub">Update status & view details</div>
+          <div className="ad-linkArrow">→</div>
         </Link>
 
         <Link to="/admin/user" className="ad-linkCard">
           <div className="ad-linkTitle">Users</div>
           <div className="ad-linkSub">Roles, status, and control</div>
+          <div className="ad-linkArrow">→</div>
         </Link>
 
         <Link to="/admin/categorie" className="ad-linkCard">
           <div className="ad-linkTitle">Categories</div>
           <div className="ad-linkSub">Enable/disable categories</div>
+          <div className="ad-linkArrow">→</div>
         </Link>
       </div>
 
@@ -137,19 +154,23 @@ export default function AdminDashboard() {
                   <th>User</th>
                   <th>Total</th>
                   <th>Status</th>
-                  <th style={{ textAlign: "right" }}>Action</th>
+                  <th className="ad-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {recent.map((o) => (
                   <tr key={o._id}>
-                    <td className="ad-mono">{o._id}</td>
+                    <td className="ad-mono" title={o._id}>
+                      {o._id}
+                    </td>
                     <td>{o?.user?.name || "—"}</td>
                     <td className="ad-strong">{money(o.total)}</td>
                     <td>
-                      <span className={badgeClass(o.status)}>{o.status || "pending"}</span>
+                      <span className={badgeClass(o.status)}>
+                        {o.status || "pending"}
+                      </span>
                     </td>
-                    <td style={{ textAlign: "right" }}>
+                    <td className="ad-right">
                       <Link className="ad-rowBtn" to={`/admin/order/${o._id}`}>
                         Details
                       </Link>

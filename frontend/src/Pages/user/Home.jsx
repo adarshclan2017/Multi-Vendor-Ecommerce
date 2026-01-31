@@ -29,7 +29,6 @@ function Home() {
       setProducts(res.data || []);
     } catch (err) {
       console.log(err);
-      alert(err.response?.data?.message || "Failed to load products");
     } finally {
       setLoading(false);
     }

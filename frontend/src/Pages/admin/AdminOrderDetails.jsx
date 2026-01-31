@@ -39,7 +39,7 @@ export default function AdminOrderDetails() {
       setOrder(res.data?.order || null);
     } catch (err) {
       console.log("❌ admin order details error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load order");
+     
     } finally {
       setLoading(false);
     }
@@ -67,10 +67,8 @@ export default function AdminOrderDetails() {
       setSaving(true);
       const res = await updateAdminOrderStatus(order._id, status);
       setOrder(res.data?.order || order);
-      alert("Status updated ✅");
     } catch (err) {
       console.log("❌ update status error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to update status");
     } finally {
       setSaving(false);
     }

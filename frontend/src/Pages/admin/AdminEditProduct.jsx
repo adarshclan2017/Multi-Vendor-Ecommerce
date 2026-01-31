@@ -60,7 +60,7 @@ export default function AdminEditProduct() {
       const p = res.data?.product;
 
       if (!p) {
-        alert("Product not found");
+      
         nav("/admin/product");
         return;
       }
@@ -79,7 +79,6 @@ export default function AdminEditProduct() {
       });
     } catch (err) {
       console.log("❌ load product error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load product");
       nav("/admin/product");
     } finally {
       setLoading(false);
@@ -133,12 +132,10 @@ export default function AdminEditProduct() {
       // console.log("Sending category:", form.category);
 
       await updateAdminProduct(id, fd);
-
-      alert("Product updated ✅");
       nav("/admin/product");
     } catch (err) {
       console.log("❌ update product error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Update failed");
+    
     } finally {
       setSaving(false);
     }

@@ -10,6 +10,7 @@ function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [errors,setErrors]=useState({})
 
   const loadOrder = async () => {
     try {
@@ -25,18 +26,15 @@ function OrderDetails() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        alert("Please login again");
         navigate("/login", { replace: true });
         return;
       }
 
       if (err.response?.status === 403) {
         alert("Access denied for this order");
-        navigate("/my-orders", { replace: true });
+        navigate("/order", { replace: true });
         return;
       }
-
-      alert(err.response?.data?.message || "Failed to load order details");
     } finally {
       setLoading(false);
     }
@@ -81,10 +79,10 @@ function OrderDetails() {
       const res = await cancelOrder(order._id);
       const updated = res.data?.order || res.data?.data || res.data;
       setOrder(updated);
-      alert("Order cancelled ✅");
+      
     } catch (err) {
       console.log("❌ cancel error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Cancel failed");
+      setErrors({message:err.response?.data?.message || "Cancel failed"});
     } finally {
       setCancelling(false);
     }
@@ -156,6 +154,7 @@ function OrderDetails() {
               ))}
             </div>
           </div>
+           {errors.message && <p className="error text-danger">{errors.message}</p>}
 
           <div className="od-card">
             <h5 className="od-title">Shipping Address</h5>

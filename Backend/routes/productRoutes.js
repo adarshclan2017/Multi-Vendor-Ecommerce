@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { addProductReview } = require("../controllers/productController");
 
 // ✅ FIX: correct upload middleware filename
 const upload = require("../middleware/uploadMiddleware");
@@ -25,6 +26,7 @@ router.get("/seller/me", protect, sellerOnly, getMyProducts);
 
 // ✅ Public: single product
 router.get("/:id", getProductById);
+router.post("/:id/reviews", protect, addProductReview);
 
 // ✅ Seller: create product (with image)
 router.post("/", protect, sellerOnly, upload.single("image"), createProduct);

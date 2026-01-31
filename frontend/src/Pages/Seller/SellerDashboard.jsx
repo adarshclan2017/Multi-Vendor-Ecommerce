@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../styles/SellerDashboard.css";
 
 import {
@@ -7,6 +7,8 @@ import {
 } from "../../api/sellerAnalyticsApi";
 
 import SellerRevenueChart from "./SellerRevenueChart";
+
+const money = (n) => `₹ ${Number(n || 0).toLocaleString("en-IN")}`;
 
 function SellerDashboard() {
   const [stats, setStats] = useState(null);
@@ -26,7 +28,7 @@ function SellerDashboard() {
       setMonthly(res2.data?.series || []);
     } catch (err) {
       console.log("❌ SellerDashboard error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load seller dashboard");
+      
     } finally {
       setLoading(false);
     }
@@ -36,17 +38,34 @@ function SellerDashboard() {
     load();
   }, []);
 
+  const totals = useMemo(() => {
+    const totalRevenue = Number(stats?.totalRevenue || 0);
+    const deliveredRevenue = Number(stats?.deliveredRevenue || 0);
+    const totalItemsSold = Number(stats?.totalItemsSold || 0);
+
+    const orders = {
+      total: Number(stats?.orders?.total || 0),
+      pending: Number(stats?.orders?.pending || 0),
+      shipped: Number(stats?.orders?.shipped || 0),
+      delivered: Number(stats?.orders?.delivered || 0),
+      cancelled: Number(stats?.orders?.cancelled || 0),
+    };
+
+    return { totalRevenue, deliveredRevenue, totalItemsSold, orders };
+  }, [stats]);
+
   return (
     <div className="seller-dash">
       <div className="seller-dash-head">
         <h2>Seller Dashboard</h2>
-        <button className="sd-refresh" onClick={load}>
-          Refresh
+
+        <button className="sd-refresh" onClick={load} disabled={loading}>
+          {loading ? "Loading..." : "Refresh"}
         </button>
       </div>
 
       {loading ? (
-        <p className="text-center">Loading...</p>
+        <p className="text-center">Loading analytics...</p>
       ) : !stats ? (
         <p className="text-center">No analytics data</p>
       ) : (
@@ -54,17 +73,17 @@ function SellerDashboard() {
           <div className="sd-grid">
             <div className="sd-card">
               <div className="sd-label">Total Revenue</div>
-              <div className="sd-value">₹ {Math.round(stats.totalRevenue || 0)}</div>
+              <div className="sd-value">{money(totals.totalRevenue)}</div>
             </div>
 
             <div className="sd-card">
               <div className="sd-label">Delivered Revenue</div>
-              <div className="sd-value">₹ {Math.round(stats.deliveredRevenue || 0)}</div>
+              <div className="sd-value">{money(totals.deliveredRevenue)}</div>
             </div>
 
             <div className="sd-card">
               <div className="sd-label">Items Sold</div>
-              <div className="sd-value">{stats.totalItemsSold || 0}</div>
+              <div className="sd-value">{totals.totalItemsSold}</div>
             </div>
 
             <div className="sd-card wide">
@@ -72,27 +91,28 @@ function SellerDashboard() {
 
               <div className="sd-row">
                 <span>Total</span>
-                <b>{stats.orders?.total || 0}</b>
+                <b>{totals.orders.total}</b>
               </div>
               <div className="sd-row">
                 <span>Pending</span>
-                <b>{stats.orders?.pending || 0}</b>
+                <b>{totals.orders.pending}</b>
               </div>
               <div className="sd-row">
                 <span>Shipped</span>
-                <b>{stats.orders?.shipped || 0}</b>
+                <b>{totals.orders.shipped}</b>
               </div>
               <div className="sd-row">
                 <span>Delivered</span>
-                <b>{stats.orders?.delivered || 0}</b>
+                <b>{totals.orders.delivered}</b>
               </div>
               <div className="sd-row">
                 <span>Cancelled</span>
-                <b>{stats.orders?.cancelled || 0}</b>
+                <b>{totals.orders.cancelled}</b>
               </div>
             </div>
           </div>
 
+          {/* Chart Card */}
           <SellerRevenueChart data={monthly} />
         </>
       )}

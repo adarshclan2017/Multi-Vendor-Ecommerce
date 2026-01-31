@@ -60,7 +60,7 @@ function SellerEditProduct() {
 
         setCurrentImage(res.data?.image || "");
       } catch (err) {
-        alert(err.response?.data?.message || "Failed to load product");
+       
         navigate("/seller/product");
       } finally {
         setLoading(false);

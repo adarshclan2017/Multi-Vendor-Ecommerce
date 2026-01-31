@@ -43,7 +43,7 @@ function Checkout() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        alert("Please login again");
+       
         navigate("/login", { replace: true });
         return;
       }
@@ -56,7 +56,7 @@ function Checkout() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first");
+     
       navigate("/login", { replace: true });
       return;
     }
@@ -111,7 +111,7 @@ function Checkout() {
 
       if (!orderId) {
         console.log("❌ OrderId missing:", res.data);
-        alert("Order placed, but order id missing");
+       
         return navigate("/my-orders", { replace: true });
       }
 
@@ -132,11 +132,10 @@ function Checkout() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        alert("Please login again");
         navigate("/login", { replace: true });
         return;
       }
-      alert(err.response?.data?.message || "Place order failed");
+    
     } finally {
       setPlacing(false);
     }

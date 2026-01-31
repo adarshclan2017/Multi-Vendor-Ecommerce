@@ -34,7 +34,6 @@ export default function AdminProduct() {
       setProducts(res.data?.products || res.data || []);
     } catch (err) {
       console.log("❌ admin products error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -81,7 +80,6 @@ export default function AdminProduct() {
       alert("Deleted ✅");
     } catch (err) {
       console.log("❌ delete product error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Delete failed");
     } finally {
       setDeletingId("");
     }
