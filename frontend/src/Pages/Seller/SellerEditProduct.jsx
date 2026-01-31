@@ -18,12 +18,15 @@ function SellerEditProduct() {
     name: "",
     price: "",
     stock: "",
-    category: "", // ✅ NEW
+    category: "",
     description: "",
-    image: null, // new file
+    image: null,
   });
 
-  const [currentImage, setCurrentImage] = useState(""); // existing image path
+  const [currentImage, setCurrentImage] = useState("");
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const newImagePreview = useMemo(() => {
     if (!product.image) return "";
@@ -43,6 +46,9 @@ function SellerEditProduct() {
     const load = async () => {
       try {
         setLoading(true);
+        setError("");
+        setSuccess("");
+
         const res = await getProductById(id);
 
         setProduct({
@@ -50,7 +56,6 @@ function SellerEditProduct() {
           price: res.data?.price ?? "",
           stock: res.data?.stock ?? "",
           description: res.data?.description || "",
-          // ✅ if populated: res.data.category._id else res.data.category
           category:
             typeof res.data?.category === "object"
               ? res.data?.category?._id || ""
@@ -60,7 +65,8 @@ function SellerEditProduct() {
 
         setCurrentImage(res.data?.image || "");
       } catch (err) {
-       
+        console.log("❌ load product error:", err.response?.data || err);
+        setError("Failed to load product");
         navigate("/seller/product");
       } finally {
         setLoading(false);
@@ -79,6 +85,7 @@ function SellerEditProduct() {
         setCategories(res.data?.categories || []);
       } catch (e) {
         console.log("❌ category load error:", e.response?.data || e);
+        setError("Failed to load categories");
       } finally {
         setLoadingCats(false);
       }
@@ -87,6 +94,11 @@ function SellerEditProduct() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
+    // clear messages while editing
+    if (error) setError("");
+    if (success) setSuccess("");
+
     setProduct((prev) => ({
       ...prev,
       [name]: files && files.length ? files[0] : value,
@@ -96,25 +108,32 @@ function SellerEditProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!product.category) {
+      setError("Please select a category");
+      return;
+    }
+
     try {
       setSaving(true);
+      setError("");
+      setSuccess("");
 
       const fd = new FormData();
       fd.append("name", product.name);
       fd.append("price", product.price);
       fd.append("stock", product.stock);
-      fd.append("category", product.category); // ✅ NEW
+      fd.append("category", product.category);
       fd.append("description", product.description);
 
-      // ✅ only send new image if user selected one
       if (product.image) fd.append("image", product.image);
 
       await updateProduct(id, fd);
 
-      alert("Product updated ✅");
-      navigate("/seller/product"); // ✅ your seller products route
+      setSuccess("Product updated successfully ✅");
+      navigate("/seller/product");
     } catch (err) {
-      alert(err.response?.data?.message || "Update failed");
+      console.log("❌ update failed:", err.response?.data || err);
+      setError(err.response?.data?.message || "Update failed");
     } finally {
       setSaving(false);
     }
@@ -134,6 +153,10 @@ function SellerEditProduct() {
           ← Back
         </button>
       </div>
+
+      {/* ✅ messages */}
+      {error && <div className="sep-error">{error}</div>}
+      {success && <div className="sep-success">{success}</div>}
 
       <form className="sep-card" onSubmit={handleSubmit}>
         <div className="sep-grid">
@@ -163,7 +186,7 @@ function SellerEditProduct() {
                 </option>
 
                 {categories
-                  .filter((c) => c.status === "active")
+                  .filter((c) => String(c.status).toLowerCase() === "active")
                   .map((c) => (
                     <option key={c._id} value={c._id}>
                       {c.name}

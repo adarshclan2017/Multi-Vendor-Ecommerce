@@ -7,31 +7,36 @@ import {
 } from "../../api/sellerOrderApi";
 
 function SellerOrderDetails() {
-  const { id } = useParams(); // MUST match :id in route
+  const { id } = useParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ✅ UI messages
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // 🔹 Load order safely
   const load = async () => {
-    if (!id) return; // 🛑 STOP if id missing
+    if (!id) return;
 
     try {
       setLoading(true);
       setError("");
+      // keep success if you want; or clear it:
+      // setSuccess("");
 
       const res = await getSellerOrderById(id);
       setOrder(res.data?.order || null);
     } catch (err) {
       console.log("❌ seller order details:", err.response?.data || err);
       setError(err.response?.data?.message || "Failed to load order");
+      setOrder(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Load only when id exists
   useEffect(() => {
     if (!id) return;
     load();
@@ -41,13 +46,12 @@ function SellerOrderDetails() {
   // 🔹 Image helper
   const getImg = (imgPath) => {
     if (!imgPath) return "/no-image.png";
-    if (imgPath.startsWith("http")) return imgPath;
+    if (String(imgPath).startsWith("http")) return imgPath;
     return `http://localhost:5000${imgPath}`;
   };
 
   const items = order?.items || [];
 
-  // 🔹 Seller total
   const sellerTotal = useMemo(() => {
     return items.reduce(
       (sum, it) => sum + Number(it.price || 0) * Number(it.qty || 0),
@@ -55,17 +59,26 @@ function SellerOrderDetails() {
     );
   }, [items]);
 
-  // 🔹 Status update
+  // 🔹 Status update (no alert)
   const changeStatus = async (status) => {
     if (!order?._id) return;
 
     try {
+      setError("");
+      setSuccess("");
+
       await updateSellerOrderStatus(order._id, status);
-      alert("Status updated ✅");
-      load();
+
+      setSuccess("Status updated successfully ✅");
+
+      // ✅ instant UI update (so you don't wait for reload)
+      setOrder((prev) => (prev ? { ...prev, status } : prev));
+
+      // optional: refresh from server (keeps everything synced)
+      await load();
     } catch (err) {
       console.log("❌ update status:", err.response?.data || err);
-     
+      setError(err.response?.data?.message || "Failed to update status");
     }
   };
 
@@ -102,11 +115,15 @@ function SellerOrderDetails() {
         </Link>
       </div>
 
+      {/* ✅ messages */}
+      {success && <div className="sod-success">{success}</div>}
+      {error && <div className="sod-error">{error}</div>}
+
       <div className="sod-grid">
         {/* LEFT CARD */}
         <div className="sod-card">
           <div className="sod-toprow">
-            <div className={`sod-status sod-${order.status}`}>
+            <div className={`sod-status sod-${String(order.status || "").toLowerCase()}`}>
               {order.status}
             </div>
 
@@ -141,20 +158,14 @@ function SellerOrderDetails() {
 
           {/* ACTIONS */}
           <div className="sod-actions">
-            {order.status === "pending" && (
-              <button
-                className="sod-btn ship"
-                onClick={() => changeStatus("shipped")}
-              >
+            {String(order.status).toLowerCase() === "pending" && (
+              <button className="sod-btn ship" onClick={() => changeStatus("shipped")}>
                 Mark Shipped
               </button>
             )}
 
-            {order.status === "shipped" && (
-              <button
-                className="sod-btn deliver"
-                onClick={() => changeStatus("delivered")}
-              >
+            {String(order.status).toLowerCase() === "shipped" && (
+              <button className="sod-btn deliver" onClick={() => changeStatus("delivered")}>
                 Mark Delivered
               </button>
             )}
@@ -171,8 +182,7 @@ function SellerOrderDetails() {
             </p>
             <p>{order.address?.street}</p>
             <p>
-              {order.address?.city}, {order.address?.state} -{" "}
-              {order.address?.pincode}
+              {order.address?.city}, {order.address?.state} - {order.address?.pincode}
             </p>
             <p>📞 {order.address?.phone}</p>
           </div>

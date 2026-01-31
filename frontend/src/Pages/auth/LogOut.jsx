@@ -4,13 +4,15 @@ function Logout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login", { replace: true });
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+    window.location.reload();
   };
 
   return (
-    <button className="logout-btn" onClick={handleLogout}>
-      Logout
+    <button onClick={handleLogout}>
+      <i className="fa-solid fa-right-from-bracket"></i> Logout
     </button>
   );
 }

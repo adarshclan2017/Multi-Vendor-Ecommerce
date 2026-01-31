@@ -203,3 +203,83 @@
   color: #64748b;
   border-top: 1px solid #e5e7eb;
 }
+.sp-error {
+  background: #fee;
+  color: #b00020;
+  border: 1px solid #f5c2c7;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin: 12px 0 16px;
+  font-size: 14px;
+}
+
+.sp-success {
+  background: #ecfdf3;
+  color: #067647;
+  border: 1px solid #abefc6;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin: 12px 0 16px;
+  font-size: 14px;
+}
+
+.sp-modalOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: grid;
+  place-items: center;
+  z-index: 999;
+}
+
+.sp-confirm{
+  width: min(560px, 92vw);
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.sp-confirm-title{
+  margin: 0 0 6px;
+  font-weight: 900;
+}
+
+.sp-confirm-text{
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+}
+
+.sp-confirmBtns{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sp-confirm-no,
+.sp-confirm-yes{
+  border: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sp-confirm-no{
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.sp-confirm-yes{
+  background: #dc2626;
+  color: #fff;
+}
+
+.sp-confirm-no:disabled,
+.sp-confirm-yes:disabled{
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

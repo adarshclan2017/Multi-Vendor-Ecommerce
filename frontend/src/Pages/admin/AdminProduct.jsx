@@ -27,13 +27,28 @@ export default function AdminProduct() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
 
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ✅ custom confirm modal state
+  const [confirmDel, setConfirmDel] = useState(null); // { _id, name }
+  const [deleting, setDeleting] = useState(false);
+
+  const flashSuccess = (text, ms = 2500) => {
+    setSuccess(text);
+    setTimeout(() => setSuccess(""), ms);
+  };
+
   const load = async () => {
     try {
       setLoading(true);
+      setError("");
+      setSuccess("");
       const res = await getAdminProducts();
       setProducts(res.data?.products || res.data || []);
     } catch (err) {
       console.log("❌ admin products error:", err.response?.data || err);
+      setError("Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -69,18 +84,33 @@ export default function AdminProduct() {
       });
   }, [products, q, cat]);
 
-  const onDelete = async (id) => {
-    const ok = window.confirm("Delete this product?");
-    if (!ok) return;
+  // ✅ open confirm modal
+  const askDelete = (p) => {
+    setError("");
+    setSuccess("");
+    setConfirmDel({ _id: p._id, name: p.name });
+  };
+
+  // ✅ do delete
+  const confirmDelete = async () => {
+    if (!confirmDel?._id) return;
 
     try {
-      setDeletingId(id);
-      await deleteAdminProduct(id);
-      setProducts((prev) => prev.filter((p) => p._id !== id));
-      alert("Deleted ✅");
+      setDeleting(true);
+      setDeletingId(confirmDel._id);
+      setError("");
+      setSuccess("");
+
+      await deleteAdminProduct(confirmDel._id);
+
+      setProducts((prev) => prev.filter((p) => p._id !== confirmDel._id));
+      setConfirmDel(null);
+      flashSuccess("Product deleted successfully ✅");
     } catch (err) {
       console.log("❌ delete product error:", err.response?.data || err);
+      setError(err.response?.data?.message || "Failed to delete product");
     } finally {
+      setDeleting(false);
       setDeletingId("");
     }
   };
@@ -104,19 +134,34 @@ export default function AdminProduct() {
         </div>
       </div>
 
+      {/* ✅ Messages */}
+      {error && <div className="ap-error">{error}</div>}
+      {success && <div className="ap-success">{success}</div>}
+
       <div className="ap-controls">
         <div className="ap-search">
           <span className="ap-ico">⌕</span>
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setQ(e.target.value);
+              if (error) setError("");
+              if (success) setSuccess("");
+            }}
             placeholder="Search product name / id / category"
           />
         </div>
 
         <div className="ap-filter">
           <label>Category</label>
-          <select value={cat} onChange={(e) => setCat(e.target.value)}>
+          <select
+            value={cat}
+            onChange={(e) => {
+              setCat(e.target.value);
+              if (error) setError("");
+              if (success) setSuccess("");
+            }}
+          >
             {categories.map((c) => (
               <option key={c} value={c}>
                 {c === "all" ? "All" : c}
@@ -173,14 +218,13 @@ export default function AdminProduct() {
 
                       <td>
                         <div className="ap-actions">
-                          {/* ✅ FIXED: route param style */}
                           <Link className="ap-actionBtn" to={`/admin/editproduct/${p._id}`}>
                             Edit
                           </Link>
 
                           <button
                             className="ap-actionBtn danger"
-                            onClick={() => onDelete(p._id)}
+                            onClick={() => askDelete(p)}
                             disabled={deletingId === p._id}
                           >
                             {deletingId === p._id ? "Deleting..." : "Delete"}
@@ -222,14 +266,13 @@ export default function AdminProduct() {
                   </div>
 
                   <div className="ap-actions">
-                    {/* ✅ FIXED: same link as desktop */}
                     <Link className="ap-actionBtn" to={`/admin/editproduct/${p._id}`}>
                       Edit
                     </Link>
 
                     <button
                       className="ap-actionBtn danger"
-                      onClick={() => onDelete(p._id)}
+                      onClick={() => askDelete(p)}
                       disabled={deletingId === p._id}
                     >
                       {deletingId === p._id ? "Deleting..." : "Delete"}
@@ -242,6 +285,39 @@ export default function AdminProduct() {
             })}
           </div>
         </>
+      )}
+
+      {/* ✅ Delete confirm modal */}
+      {confirmDel && (
+        <div
+          className="ap-modalOverlay"
+          onClick={() => !deleting && setConfirmDel(null)}
+        >
+          <div className="ap-confirm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="ap-confirm-title">Delete Product?</h3>
+            <p className="ap-confirm-text">
+              Are you sure you want to delete <b>{confirmDel.name}</b>?
+            </p>
+
+            <div className="ap-confirmBtns">
+              <button
+                className="ap-actionBtn"
+                onClick={() => setConfirmDel(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="ap-actionBtn danger"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

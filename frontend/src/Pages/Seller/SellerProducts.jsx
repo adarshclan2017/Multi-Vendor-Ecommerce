@@ -9,14 +9,36 @@ function SellerProducts() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState("");
 
+  // ✅ UI messages
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ✅ custom confirm modal
+  const [confirmDel, setConfirmDel] = useState(null); // { _id, name }
+  const [deleting, setDeleting] = useState(false);
+
+  const flashSuccess = (text, ms = 2500) => {
+    setSuccess(text);
+    setTimeout(() => setSuccess(""), ms);
+  };
+
   const loadProducts = async () => {
     try {
       setLoading(true);
+      setError("");
+      setSuccess("");
+
       const res = await getMyProducts();
       setProducts(res.data || []);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to load products");
-      if (err.response?.status === 401) navigate("/login");
+      console.log("❌ load products:", err.response?.data || err);
+
+      if (err.response?.status === 401) {
+        setError("Session expired. Please login again.");
+        return navigate("/login");
+      }
+
+      setError(err.response?.data?.message || "Failed to load products");
     } finally {
       setLoading(false);
     }
@@ -31,24 +53,45 @@ function SellerProducts() {
 
   const getCategoryName = (p) => {
     if (!p?.category) return "Uncategorized";
-    // populated object
     if (typeof p.category === "object") return p.category?.name || "Uncategorized";
-    // string/id fallback
     return String(p.category);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this product?")) return;
+  // ✅ open confirm modal
+  const askDelete = (p) => {
+    setError("");
+    setSuccess("");
+    setConfirmDel({ _id: p._id, name: p.name });
+  };
+
+  // ✅ confirm delete
+  const confirmDelete = async () => {
+    if (!confirmDel?._id) return;
 
     try {
-      setDeletingId(id);
-      await deleteProduct(id);
+      setDeleting(true);
+      setDeletingId(confirmDel._id);
+      setError("");
+      setSuccess("");
 
-      // instant UI update
-      setProducts((prev) => prev.filter((x) => x._id !== id));
+      await deleteProduct(confirmDel._id);
+
+      // ✅ instant UI update
+      setProducts((prev) => prev.filter((x) => x._id !== confirmDel._id));
+      setConfirmDel(null);
+      flashSuccess("Product deleted successfully ✅");
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed");
+      console.log("❌ delete failed:", err.response?.data || err);
+
+      if (err.response?.status === 401) {
+        setError("Session expired. Please login again.");
+        setConfirmDel(null);
+        return navigate("/login");
+      }
+
+      setError(err.response?.data?.message || "Delete failed");
     } finally {
+      setDeleting(false);
       setDeletingId("");
     }
   };
@@ -65,6 +108,10 @@ function SellerProducts() {
           + Add Product
         </button>
       </div>
+
+      {/* ✅ Messages */}
+      {error && <div className="sp-error">{error}</div>}
+      {success && <div className="sp-success">{success}</div>}
 
       {loading ? (
         <p className="status">Loading...</p>
@@ -91,13 +138,22 @@ function SellerProducts() {
               <div className="info">
                 <div className="name-row">
                   <h4 title={p.name}>{p.name}</h4>
-
-                  {/* ✅ Category Badge */}
                   <span className="cat-badge">{getCategoryName(p)}</span>
                 </div>
 
-                <p className="price">₹ {Number(p.price || 0).toLocaleString("en-IN")}</p>
-                <p className={`stock ${Number(p.stock || 0) <= 0 ? "out" : Number(p.stock || 0) <= 5 ? "low" : "in"}`}>
+                <p className="price">
+                  ₹ {Number(p.price || 0).toLocaleString("en-IN")}
+                </p>
+
+                <p
+                  className={`stock ${
+                    Number(p.stock || 0) <= 0
+                      ? "out"
+                      : Number(p.stock || 0) <= 5
+                      ? "low"
+                      : "in"
+                  }`}
+                >
                   Stock: {p.stock}
                 </p>
               </div>
@@ -109,7 +165,7 @@ function SellerProducts() {
 
                 <button
                   className="delete"
-                  onClick={() => handleDelete(p._id)}
+                  onClick={() => askDelete(p)}
                   disabled={deletingId === p._id}
                 >
                   {deletingId === p._id ? "Deleting..." : "Delete"}
@@ -119,6 +175,39 @@ function SellerProducts() {
               <div className="pid">ID: {p._id}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ✅ Delete Confirm Modal (NO browser popup) */}
+      {confirmDel && (
+        <div
+          className="sp-modalOverlay"
+          onClick={() => !deleting && setConfirmDel(null)}
+        >
+          <div className="sp-confirm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="sp-confirm-title">Delete Product?</h3>
+            <p className="sp-confirm-text">
+              Are you sure you want to delete <b>{confirmDel.name}</b>?
+            </p>
+
+            <div className="sp-confirmBtns">
+              <button
+                className="sp-confirm-no"
+                onClick={() => setConfirmDel(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="sp-confirm-yes"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

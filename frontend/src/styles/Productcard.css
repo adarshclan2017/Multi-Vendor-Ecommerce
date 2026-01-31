@@ -203,3 +203,17 @@
 .pc-rev {
   color: #000;
 }
+
+.pc-msg {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.pc-msg--error {
+  color: #dc2626;
+}
+
+.pc-msg--success {
+  color: #16a34a;
+}

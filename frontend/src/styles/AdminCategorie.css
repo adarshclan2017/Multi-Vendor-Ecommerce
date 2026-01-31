@@ -236,3 +236,51 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.ac-error {
+  background: #fee;
+  color: #b00020;
+  border: 1px solid #f5c2c7;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.ac-success{
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.ac-confirm{
+  width: min(520px, 92vw);
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.ac-confirm-title{
+  margin: 0 0 6px;
+  font-weight: 900;
+}
+
+.ac-confirm-text{
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+}
+
+.ac-confirmBtns{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+

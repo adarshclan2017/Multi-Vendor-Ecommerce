@@ -31,14 +31,18 @@ export default function AdminOrders() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
 
+  const [error, setError] = useState("");
+
   const loadOrders = async () => {
     try {
       setLoading(true);
+      setError("");
       const res = await getAdminOrders();
       setOrders(res.data?.orders || []);
     } catch (err) {
       console.log("❌ admin orders error:", err.response?.data || err);
       setOrders([]);
+      setError("Failed to load orders");
     } finally {
       setLoading(false);
     }
@@ -71,15 +75,17 @@ export default function AdminOrders() {
 
     try {
       setSavingId(orderId);
+      setError("");
+
       await updateAdminOrderStatus(orderId, next);
 
-      // instant UI update
+      // ✅ instant UI update
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, status: next } : o))
       );
     } catch (err) {
       console.log("❌ update order status error:", err.response?.data || err);
-      alert(err.response?.data?.message || "Failed to update status");
+      setError(err.response?.data?.message || "Failed to update status");
     } finally {
       setSavingId("");
     }
@@ -99,20 +105,32 @@ export default function AdminOrders() {
         </button>
       </div>
 
+      {/* ✅ Error message */}
+      {error && <div className="ao-error">{error}</div>}
+
       {/* Controls */}
       <div className="ao-controls">
         <div className="ao-search">
           <span className="ao-ico">⌕</span>
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              setQ(e.target.value);
+              if (error) setError("");
+            }}
             placeholder="Search by Order ID / User / Email"
           />
         </div>
 
         <div className="ao-filter">
           <label>Status</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              if (error) setError("");
+            }}
+          >
             <option value="all">All</option>
             <option value="pending">Pending</option>
             <option value="shipped">Shipped</option>
@@ -148,7 +166,9 @@ export default function AdminOrders() {
                   <tr key={o._id}>
                     <td className="ao-mono">
                       <div className="ao-id">{o._id}</div>
-                      <div className="ao-muted">{(o.items?.length || 0)} item(s)</div>
+                      <div className="ao-muted">
+                        {(o.items?.length || 0)} item(s)
+                      </div>
                       <Link className="ao-link" to={`/admin/order/${o._id}`}>
                         View details →
                       </Link>
@@ -164,7 +184,9 @@ export default function AdminOrders() {
                     <td className="ao-strong">{money(o.total)}</td>
 
                     <td>
-                      <span className={badgeClass(o.status)}>{o.status || "pending"}</span>
+                      <span className={badgeClass(o.status)}>
+                        {o.status || "pending"}
+                      </span>
                     </td>
 
                     <td>
@@ -181,7 +203,9 @@ export default function AdminOrders() {
                           <option value="cancelled">Cancelled</option>
                         </select>
 
-                        {savingId === o._id && <span className="ao-saving">Saving…</span>}
+                        {savingId === o._id && (
+                          <span className="ao-saving">Saving…</span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -198,7 +222,9 @@ export default function AdminOrders() {
                   <div className="ao-mono ao-id" title={o._id}>
                     {o._id}
                   </div>
-                  <span className={badgeClass(o.status)}>{o.status || "pending"}</span>
+                  <span className={badgeClass(o.status)}>
+                    {o.status || "pending"}
+                  </span>
                 </div>
 
                 <div className="ao-cardRow">

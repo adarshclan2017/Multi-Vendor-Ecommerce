@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./Register.css";
 import { registeruser } from "../../api/authapi";
 import { useNavigate, Link } from "react-router-dom";
+import Select from "react-select";
 
 function Register() {
   const navigate = useNavigate();
@@ -13,6 +14,11 @@ function Register() {
     password: "",
     confirmPassword: "",
   });
+
+  const roleOptions = [
+    { value: "user", label: "User" },
+    { value: "seller", label: "Seller" },
+  ];
 
   const [errors, setErrors] = useState({});
 
@@ -67,18 +73,19 @@ function Register() {
       const res = await registeruser(payload);
       console.log("Backend response:", res.data);
 
-
-      // ✅ navigate to login after register
       navigate("/login", { replace: true });
     } catch (error) {
-      setErrors({ message: error.response?.data?.message } || "Registration failed");
+      setErrors({
+        message: error.response?.data?.message || "Registration failed",
+      });
     }
   };
 
   return (
     <div className="register">
-      <div className="row justify-content-center">
-        <div className="card shadow p-4">
+      {/* ✅ wrapper to avoid Bootstrap row width limits */}
+      <div className="register-wrap">
+        <div className="card shadow p-4 register-card">
           <h3 className="text-center mb-4">Register</h3>
 
           <form onSubmit={handlesubmit}>
@@ -93,7 +100,6 @@ function Register() {
                 placeholder="Enter your name"
               />
               {errors.name && <p className="error">{errors.name}</p>}
-
             </div>
 
             <div className="mb-3">
@@ -109,18 +115,19 @@ function Register() {
               {errors.email && <p className="error">{errors.email}</p>}
             </div>
 
-            <div className="mb-3 ">
+            <div className="mb-3">
               <label className="form-label">Register As</label>
-              <select
-                className="form-select"
-                name="role"
-                value={formData.role}
-                onChange={handlechange}
-              >
-                <option value="">Select Role</option>
-                <option value="user">User</option>
-                <option value="seller">Seller</option>
-              </select>
+
+              <Select
+                options={roleOptions}
+                value={roleOptions.find(opt => opt.value === formData.role) || null}
+                onChange={(selected) =>
+                  setFormData({ ...formData, role: selected?.value || "" })
+                }
+                placeholder="Select Role"
+                classNamePrefix="glass-select"
+              />
+
               {errors.role && <p className="error">{errors.role}</p>}
             </div>
 
@@ -158,7 +165,6 @@ function Register() {
               Register
             </button>
 
-            {/* ✅ Bottom Login line */}
             <p className="text-center mt-3 mb-0">
               Already have an account?{" "}
               <Link to="/login" className="fw-bold text-decoration-none">

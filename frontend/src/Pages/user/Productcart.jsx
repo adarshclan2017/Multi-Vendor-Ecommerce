@@ -10,9 +10,17 @@ import "../../styles/Productcart.css";
 
 function Productcart() {
   const navigate = useNavigate();
+
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [errors, setErrors] = useState({})
+
+  // ✅ one message box
+  const [msg, setMsg] = useState({ type: "", text: "" });
+
+  const showMsg = (type, text, ms = 3500) => {
+    setMsg({ type, text });
+    if (ms) setTimeout(() => setMsg({ type: "", text: "" }), ms);
+  };
 
   const loadCart = async () => {
     try {
@@ -25,7 +33,7 @@ function Productcart() {
         localStorage.removeItem("user");
         navigate("/login", { replace: true });
       } else {
-        console.log(err.response?.data?.message || "Failed to load cart");
+        showMsg("error", err.response?.data?.message || "Failed to load cart");
       }
     } finally {
       setLoading(false);
@@ -34,12 +42,10 @@ function Productcart() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (!token) {
       navigate("/login", { replace: true });
       return;
     }
-
     loadCart();
     // eslint-disable-next-line
   }, [navigate]);
@@ -54,45 +60,68 @@ function Productcart() {
 
   const changeQty = async (productId, qty) => {
     if (qty < 1) return;
+    setMsg({ type: "", text: "" });
+
     try {
       const res = await updateCartItem(productId, qty);
       setCart(res.data);
     } catch (err) {
-      setErrors({message:err.response?.data?.message || "Update failed"});
+      showMsg("error", err.response?.data?.message || "Update failed");
     }
   };
 
   const removeItem = async (productId) => {
+    setMsg({ type: "", text: "" });
+
     try {
       const res = await removeCartItem(productId);
       setCart(res.data);
+      showMsg("success", "Item removed ✅", 2500);
     } catch (err) {
-     setErrors({message:err.response?.data?.message || "Remove failed"});
+      showMsg("error", err.response?.data?.message || "Remove failed");
     }
   };
 
   const handleClear = async () => {
-    if (!window.confirm("Clear cart?")) return;
+    setMsg({ type: "", text: "" });
+
     try {
       await clearCart();
-      await loadCart();
+
+      // ✅ update UI instantly without confirm
+      setCart((prev) => (prev ? { ...prev, items: [] } : prev));
+
+      showMsg("success", "Cart cleared ✅", 2500);
     } catch (err) {
-     setErrors({message:err.response?.data?.message || "clear failed"});
+      showMsg("error", err.response?.data?.message || "Clear failed");
     }
   };
 
   if (loading) return <p className="cart-status">Loading cart...</p>;
 
+  const hasItems = Boolean(cart?.items?.length);
+
   return (
     <div className="cart-page">
       <div className="cart-header">
         <h2>My Cart</h2>
-        <button className="clear-btn" onClick={handleClear}>
-          Clear Cart
-        </button>
+
+        {/* ✅ hide clear button if cart empty */}
+        {hasItems && (
+          <button className="clear-btn" onClick={handleClear}>
+            Clear Cart
+          </button>
+        )}
       </div>
 
-      {!cart?.items?.length ? (
+      {/* ✅ message at top (not inside each item) */}
+      {msg.text && (
+        <p className={`cart-msg ${msg.type === "error" ? "cart-msg--error" : "cart-msg--success"}`}>
+          {msg.text}
+        </p>
+      )}
+
+      {!hasItems ? (
         <p className="cart-status">Cart is empty.</p>
       ) : (
         <>
@@ -114,28 +143,17 @@ function Productcart() {
                     <p className="price">₹ {p?.price}</p>
 
                     <div className="qty-row">
-                      <button onClick={() => changeQty(p._id, it.qty - 1)}>
-                        -
-                      </button>
+                      <button onClick={() => changeQty(p._id, it.qty - 1)}>-</button>
                       <span>{it.qty}</span>
-                      <button onClick={() => changeQty(p._id, it.qty + 1)}>
-                        +
-                      </button>
+                      <button onClick={() => changeQty(p._id, it.qty + 1)}>+</button>
                     </div>
 
-                    <button
-                      className="remove-btn"
-                      onClick={() => removeItem(p._id)}
-                    >
+                    <button className="remove-btn" onClick={() => removeItem(p._id)}>
                       Remove
                     </button>
                   </div>
 
-
-                  <div className="line-total">
-                    ₹ {Number(p?.price || 0) * it.qty}
-                  </div>
-              {errors.message && <p className="error text-danger">{errors.message}</p>}
+                  <div className="line-total">₹ {Number(p?.price || 0) * it.qty}</div>
                 </div>
               );
             })}
@@ -143,10 +161,7 @@ function Productcart() {
 
           <div className="cart-summary">
             <h3>Total: ₹ {total}</h3>
-            <button
-              className="checkout-btn"
-              onClick={() => navigate("/checkout")}
-            >
+            <button className="checkout-btn" onClick={() => navigate("/checkout")}>
               Proceed to Checkout
             </button>
           </div>

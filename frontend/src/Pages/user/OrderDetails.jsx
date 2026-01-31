@@ -10,14 +10,20 @@ function OrderDetails() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [errors,setErrors]=useState({})
+
+  // ✅ UI messages
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ✅ custom confirm state (no window.confirm)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const loadOrder = async () => {
     try {
       setLoading(true);
-      const res = await getOrderById(id);
+      setError("");
 
-      // ✅ supports: {order}, {data}, order directly
+      const res = await getOrderById(id);
       const o = res.data?.order || res.data?.data || res.data;
       setOrder(o || null);
     } catch (err) {
@@ -26,15 +32,19 @@ function OrderDetails() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        setError("Session expired. Please login again.");
         navigate("/login", { replace: true });
         return;
       }
 
       if (err.response?.status === 403) {
-        alert("Access denied for this order");
-        navigate("/order", { replace: true });
+        setError("Access denied for this order");
+        navigate("/my-orders", { replace: true });
         return;
       }
+
+      setError(err.response?.data?.message || "Failed to load order");
+      setOrder(null);
     } finally {
       setLoading(false);
     }
@@ -63,30 +73,44 @@ function OrderDetails() {
 
   const getImg = (imgPath) => {
     if (!imgPath) return "/no-image.png";
-    if (imgPath.startsWith("http")) return imgPath;
+    if (String(imgPath).startsWith("http")) return imgPath;
     return `http://localhost:5000${imgPath}`;
   };
 
   const canCancel = String(order?.status || "").toLowerCase() === "pending";
 
-  const handleCancel = async () => {
+  // ✅ step 1: open confirm UI
+  const handleCancelClick = () => {
     if (!order?._id || !canCancel) return;
-    const ok = window.confirm("Cancel this order?");
-    if (!ok) return;
+    setError("");
+    setSuccess("");
+    setShowCancelConfirm(true);
+  };
+
+  // ✅ step 2: user confirms -> cancel
+  const confirmCancel = async () => {
+    if (!order?._id || !canCancel) return;
 
     try {
       setCancelling(true);
+      setError("");
+      setSuccess("");
+
       const res = await cancelOrder(order._id);
       const updated = res.data?.order || res.data?.data || res.data;
+
       setOrder(updated);
-      
+      setSuccess("Order cancelled successfully ✅");
+      setShowCancelConfirm(false);
     } catch (err) {
       console.log("❌ cancel error:", err.response?.data || err);
-      setErrors({message:err.response?.data?.message || "Cancel failed"});
+      setError(err.response?.data?.message || "Cancel failed");
     } finally {
       setCancelling(false);
     }
   };
+
+  const closeConfirm = () => setShowCancelConfirm(false);
 
   return (
     <div className="od-page container-fluid my-4 px-3 px-md-4">
@@ -98,10 +122,33 @@ function OrderDetails() {
           </p>
         </div>
 
-        <Link to="/my-orders" className="od-back">
+        <Link to="/order" className="od-back">
           ← Back to My Orders
         </Link>
       </div>
+
+      {/* ✅ Messages */}
+      {error && <div className="od-error">{error}</div>}
+      {success && <div className="od-success">{success}</div>}
+
+      {/* ✅ Custom confirm box (NO browser popup) */}
+      {showCancelConfirm && (
+        <div className="od-confirm">
+          <div className="od-confirm-title">Cancel this order?</div>
+          <div className="od-confirm-sub">
+            This action cannot be undone.
+          </div>
+
+          <div className="od-confirm-actions">
+            <button className="od-confirm-no" onClick={closeConfirm} disabled={cancelling}>
+              No
+            </button>
+            <button className="od-confirm-yes" onClick={confirmCancel} disabled={cancelling}>
+              {cancelling ? "Cancelling..." : "Yes, Cancel"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-center mt-4">Loading...</p>
@@ -125,10 +172,10 @@ function OrderDetails() {
               {canCancel && (
                 <button
                   className="od-cancel-btn"
-                  onClick={handleCancel}
+                  onClick={handleCancelClick}
                   disabled={cancelling}
                 >
-                  {cancelling ? "Cancelling..." : "Cancel Order"}
+                  Cancel Order
                 </button>
               )}
             </div>
@@ -149,17 +196,20 @@ function OrderDetails() {
                     </div>
                   </div>
 
-                  <div className="od-lineprice">₹ {Number(it.price || 0) * Number(it.qty || 0)}</div>
+                  <div className="od-lineprice">
+                    ₹ {Number(it.price || 0) * Number(it.qty || 0)}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-           {errors.message && <p className="error text-danger">{errors.message}</p>}
 
           <div className="od-card">
             <h5 className="od-title">Shipping Address</h5>
             <div className="od-address">
-              <p><b>{order.address?.fullName}</b></p>
+              <p>
+                <b>{order.address?.fullName}</b>
+              </p>
               <p>{order.address?.street}</p>
               <p>
                 {order.address?.city}, {order.address?.state} - {order.address?.pincode}

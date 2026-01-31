@@ -15,17 +15,31 @@ export default function AdminCategorie() {
   const [adding, setAdding] = useState(false);
 
   // edit modal state
-  const [editing, setEditing] = useState(null); // { _id, name, status }
+  const [editing, setEditing] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  // ✅ messages
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ✅ delete confirm modal
+  const [confirmDel, setConfirmDel] = useState(null); // { _id, name }
+  const [deleting, setDeleting] = useState(false);
+
+  const flashSuccess = (text, ms = 2500) => {
+    setSuccess(text);
+    setTimeout(() => setSuccess(""), ms);
+  };
 
   const load = async () => {
     try {
       setLoading(true);
+      setError("");
       const res = await getAdminCategories();
       setCategories(res.data?.categories || []);
     } catch (err) {
-      console.log("❌ load categories error:", err.response?.data || err);
-     
+      console.log("❌ load categories error:", err);
+      setError("Failed to load categories");
     } finally {
       setLoading(false);
     }
@@ -36,69 +50,104 @@ export default function AdminCategorie() {
   }, []);
 
   const sorted = useMemo(() => {
-    return [...categories].sort((a, b) => {
-      // active first
-      if (a.status === b.status) return 0;
-      return a.status === "active" ? -1 : 1;
-    });
+    return [...categories].sort((a, b) =>
+      a.status === b.status ? 0 : a.status === "active" ? -1 : 1
+    );
   }, [categories]);
 
   const addCategory = async () => {
-    if (!name.trim()) return alert("Enter category name");
+    if (!name.trim()) {
+      setError("Category name is required");
+      return;
+    }
+
     try {
       setAdding(true);
+      setError("");
+      setSuccess("");
       await createAdminCategory({ name });
       setName("");
+      flashSuccess("Category added ✅");
       load();
     } catch (err) {
-      console.log("❌ add category error:", err.response?.data || err);
+      console.log("❌ add category error:", err);
+      setError(err.response?.data?.message || "Failed to add category");
     } finally {
       setAdding(false);
     }
   };
 
-  const remove = async (id) => {
-    if (!window.confirm("Delete this category?")) return;
+  // ✅ open custom confirm modal
+  const remove = (cat) => {
+    setError("");
+    setSuccess("");
+    setConfirmDel({ _id: cat._id, name: cat.name });
+  };
+
+  // ✅ confirm delete action
+  const confirmDelete = async () => {
+    if (!confirmDel?._id) return;
+
     try {
-      await deleteAdminCategory(id);
-      setCategories((prev) => prev.filter((c) => c._id !== id));
+      setDeleting(true);
+      setError("");
+      await deleteAdminCategory(confirmDel._id);
+
+      setCategories((prev) => prev.filter((c) => c._id !== confirmDel._id));
+      setConfirmDel(null);
+      flashSuccess("Category deleted ✅");
     } catch (err) {
-      console.log("❌ delete category error:", err.response?.data || err);
-     
+      console.log("❌ delete category error:", err);
+      setError(err.response?.data?.message || "Failed to delete category");
+    } finally {
+      setDeleting(false);
     }
   };
 
   const toggleStatus = async (cat) => {
     const next = cat.status === "active" ? "inactive" : "active";
+
     try {
-      // optimistic UI
+      setError("");
+      setSuccess("");
       setCategories((prev) =>
         prev.map((c) => (c._id === cat._id ? { ...c, status: next } : c))
       );
       await updateAdminCategory(cat._id, { status: next });
+      flashSuccess(`Category ${next === "active" ? "enabled" : "disabled"} ✅`);
     } catch (err) {
-      console.log("❌ toggle status error:", err.response?.data || err);
-      load(); // revert
+      console.log("❌ toggle status error:", err);
+      setError(err.response?.data?.message || "Failed to update status");
+      load();
     }
   };
 
   const openEdit = (cat) => {
     setEditing({ _id: cat._id, name: cat.name, status: cat.status });
+    setError("");
+    setSuccess("");
   };
 
   const saveEdit = async () => {
-    if (!editing?.name?.trim()) return alert("Name required");
+    if (!editing?.name?.trim()) {
+      setError("Category name is required");
+      return;
+    }
+
     try {
       setSavingEdit(true);
+      setError("");
+      setSuccess("");
       await updateAdminCategory(editing._id, {
         name: editing.name,
         status: editing.status,
       });
       setEditing(null);
+      flashSuccess("Changes saved ✅");
       load();
     } catch (err) {
-      console.log("❌ edit save error:", err.response?.data || err);
-     
+      console.log("❌ edit save error:", err);
+      setError(err.response?.data?.message || "Failed to save changes");
     } finally {
       setSavingEdit(false);
     }
@@ -112,6 +161,10 @@ export default function AdminCategorie() {
           <p className="ac-sub">Add, edit and enable/disable categories</p>
         </div>
       </div>
+
+      {/* ✅ Messages */}
+      {error && <div className="ac-error">{error}</div>}
+      {success && <div className="ac-success">{success}</div>}
 
       {/* Add category */}
       <div className="ac-add">
@@ -158,17 +211,12 @@ export default function AdminCategorie() {
 
                   <td style={{ textAlign: "right" }}>
                     <div className="ac-actions">
-                      <button
-                        className="ac-actionBtn"
-                        onClick={() => openEdit(c)}
-                      >
+                      <button className="ac-actionBtn" onClick={() => openEdit(c)}>
                         Edit
                       </button>
 
                       <button
-                        className={`ac-actionBtn ${
-                          c.status === "active" ? "warn" : "ok"
-                        }`}
+                        className={`ac-actionBtn ${c.status === "active" ? "warn" : "ok"}`}
                         onClick={() => toggleStatus(c)}
                       >
                         {c.status === "active" ? "Disable" : "Enable"}
@@ -176,7 +224,7 @@ export default function AdminCategorie() {
 
                       <button
                         className="ac-actionBtn danger"
-                        onClick={() => remove(c._id)}
+                        onClick={() => remove(c)}
                       >
                         Delete
                       </button>
@@ -225,6 +273,36 @@ export default function AdminCategorie() {
 
               <button className="ac-save" onClick={saveEdit} disabled={savingEdit}>
                 {savingEdit ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Delete Confirm Modal */}
+      {confirmDel && (
+        <div className="ac-modalOverlay" onClick={() => !deleting && setConfirmDel(null)}>
+          <div className="ac-confirm" onClick={(e) => e.stopPropagation()}>
+            <h3 className="ac-confirm-title">Delete Category?</h3>
+            <p className="ac-confirm-text">
+              Are you sure you want to delete <b>{confirmDel.name}</b>?
+            </p>
+
+            <div className="ac-confirmBtns">
+              <button
+                className="ac-actionBtn"
+                onClick={() => setConfirmDel(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="ac-actionBtn danger"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
           </div>

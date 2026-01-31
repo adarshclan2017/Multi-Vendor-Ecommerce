@@ -17,20 +17,24 @@ export default function AdminEditProduct() {
     name: "",
     price: "",
     stock: "",
-    category: "", // ✅ must store categoryId
+    category: "",
     description: "",
     image: "",
   });
 
   const [imageFile, setImageFile] = useState(null);
 
+  const [error, setError] = useState("");
+
   // ✅ Load categories
   const loadCategories = async () => {
     try {
+      setError("");
       const res = await getAdminCategories();
       setCategories(res.data?.categories || []);
     } catch (err) {
       console.log("❌ category load error:", err.response?.data || err);
+      setError("Failed to load categories");
     }
   };
 
@@ -56,16 +60,17 @@ export default function AdminEditProduct() {
   const loadProduct = async () => {
     try {
       setLoading(true);
+      setError("");
+
       const res = await getAdminProductById(id);
       const p = res.data?.product;
 
       if (!p) {
-      
+        setError("Product not found");
         nav("/admin/product");
         return;
       }
 
-      // ✅ convert category to id always (handles populated object OR string id)
       const categoryId =
         typeof p.category === "object" ? p.category?._id || "" : p.category || "";
 
@@ -79,6 +84,7 @@ export default function AdminEditProduct() {
       });
     } catch (err) {
       console.log("❌ load product error:", err.response?.data || err);
+      setError("Failed to load product details");
       nav("/admin/product");
     } finally {
       setLoading(false);
@@ -99,11 +105,8 @@ export default function AdminEditProduct() {
   const onChange = (e) => {
     const { name, value } = e.target;
 
-    // small safety for number fields (optional)
-    if (name === "price" || name === "stock") {
-      setForm((p) => ({ ...p, [name]: value }));
-      return;
-    }
+    // optional: clear error when user edits
+    if (error) setError("");
 
     setForm((p) => ({ ...p, [name]: value }));
   };
@@ -111,31 +114,28 @@ export default function AdminEditProduct() {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ basic validation
     if (!form.category) {
-      alert("Please select a category");
+      setError("Please select a category");
       return;
     }
 
     try {
       setSaving(true);
+      setError("");
 
       const fd = new FormData();
       fd.append("name", form.name.trim());
       fd.append("price", String(form.price));
       fd.append("stock", String(form.stock));
-      fd.append("category", form.category); // ✅ MUST BE categoryId (_id)
+      fd.append("category", form.category);
       fd.append("description", form.description || "");
       if (imageFile) fd.append("image", imageFile);
-
-      // debug once if needed:
-      // console.log("Sending category:", form.category);
 
       await updateAdminProduct(id, fd);
       nav("/admin/product");
     } catch (err) {
       console.log("❌ update product error:", err.response?.data || err);
-    
+      setError(err.response?.data?.message || "Failed to update product");
     } finally {
       setSaving(false);
     }
@@ -156,6 +156,9 @@ export default function AdminEditProduct() {
         </Link>
       </div>
 
+      {/* ✅ Error message UI */}
+      {error && <div className="aep-error">{error}</div>}
+
       {loading ? (
         <div className="aep-empty">Loading...</div>
       ) : (
@@ -171,7 +174,6 @@ export default function AdminEditProduct() {
               />
             </div>
 
-            {/* ✅ CATEGORY DROPDOWN (FIXED) */}
             <div className="aep-field">
               <label>Category *</label>
 
@@ -198,7 +200,6 @@ export default function AdminEditProduct() {
                   {categories
                     .filter((c) => String(c.status).toLowerCase() === "active")
                     .map((c) => (
-                      // ✅ value must be _id
                       <option key={c._id} value={c._id}>
                         {c.name}
                       </option>
@@ -262,7 +263,10 @@ export default function AdminEditProduct() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    if (error) setError("");
+                    setImageFile(e.target.files?.[0] || null);
+                  }}
                 />
 
                 {imagePreview ? (

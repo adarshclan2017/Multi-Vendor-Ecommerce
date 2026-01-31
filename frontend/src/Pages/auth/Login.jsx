@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./Login.module.css";
 import { loginuser } from "../../api/authapi";
-import { useNavigate, Link } from "react-router-dom"; // ✅ add Link
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
@@ -52,36 +52,33 @@ function Login() {
         res.data?.user ||
         (res.data?._id
           ? {
-            _id: res.data._id,
-            name: res.data.name,
-            email: res.data.email,
-            role: res.data.role,
-          }
+              _id: res.data._id,
+              name: res.data.name,
+              email: res.data.email,
+              role: res.data.role,
+            }
           : null);
 
       if (!token) {
-        console.log("❌ token missing:", res.data);
         return setErrors({ message: res.data?.message || "token not found" });
       }
 
       localStorage.setItem("token", token);
       if (user) localStorage.setItem("user", JSON.stringify(user));
-      console.log("✅ Login response:", res.data);
 
       const role = user?.role || res.data?.role;
       if (role === "admin") return navigate("/admin", { replace: true });
       if (role === "seller") return navigate("/seller", { replace: true });
       return navigate("/", { replace: true });
     } catch (err) {
-      console.log("❌ login error:", err.response?.data || err);
-      setErrors({ message: err.response?.data?.message });
+      setErrors({ message: err.response?.data?.message || "Login failed" });
     }
   };
 
   return (
     <div className={styles.Login}>
-      <div className="row justify-content-center">
-        <div className="card shadow p-4">
+      <div className={styles.wrap}>
+        <div className={`${styles.card} shadow`}>
           <h3 className="text-center mb-4">LOGIN</h3>
 
           <form onSubmit={handleSubmit}>
@@ -95,7 +92,7 @@ function Login() {
                 value={formdata.email}
                 onChange={handleChange}
               />
-              {errors.email && <p className="error">{errors.email}</p>}
+              {errors.email && <p className={styles.error}>{errors.email}</p>}
             </div>
 
             <div className="mb-3">
@@ -108,18 +105,19 @@ function Login() {
                 value={formdata.password}
                 onChange={handleChange}
               />
-              {errors.password && <p className="error">{errors.password}</p>}
+              {errors.password && (
+                <p className={styles.error}>{errors.password}</p>
+              )}
             </div>
 
-              {errors.message && <p className="error text-danger">{errors.message}</p>}
-            <button
-              type="submit"
-              className="btn btn-primary w-50 mx-auto d-block"
-            >
+            {errors.message && (
+              <p className={`${styles.error} text-danger`}>{errors.message}</p>
+            )}
+
+            <button type="submit" className="btn btn-primary w-50 mx-auto d-block">
               Login
             </button>
 
-            {/* ✅ Register link */}
             <p className="text-center mt-3 mb-0">
               Don&apos;t have an account?{" "}
               <Link to="/reg" className="fw-bold text-decoration-none">

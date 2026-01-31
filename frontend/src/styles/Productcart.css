@@ -132,3 +132,12 @@
   cursor: pointer;
   font-weight: 800;
 }
+
+.cart-msg{
+  margin: 10px 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cart-msg--error{ color:#dc2626; }
+.cart-msg--success{ color:#16a34a; }

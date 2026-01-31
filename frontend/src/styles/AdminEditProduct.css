@@ -181,3 +181,13 @@
   cursor: not-allowed;
   transform: none;
 }
+
+.aep-error {
+  background: #fee;
+  color: #b00020;
+  border: 1px solid #f5c2c7;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin: 12px 0 16px;
+  font-size: 14px;
+}

@@ -21,7 +21,6 @@ function AdminUsers() {
   const [savingId, setSavingId] = useState("");
 
   const [q, setQ] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const loadUsers = async () => {
@@ -43,8 +42,11 @@ function AdminUsers() {
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
     return (users || [])
-      .filter((u) => (roleFilter === "all" ? true : String(u.role).toLowerCase() === roleFilter))
-      .filter((u) => (statusFilter === "all" ? true : String(u.status || "active").toLowerCase() === statusFilter))
+      .filter((u) =>
+        statusFilter === "all"
+          ? true
+          : String(u.status || "active").toLowerCase() === statusFilter
+      )
       .filter((u) => {
         if (!query) return true;
         const name = String(u.name || "").toLowerCase();
@@ -52,19 +54,22 @@ function AdminUsers() {
         const id = String(u._id || "").toLowerCase();
         return name.includes(query) || email.includes(query) || id.includes(query);
       });
-  }, [users, q, roleFilter, statusFilter]);
+  }, [users, q, statusFilter]);
 
-  const save = async (id, payload) => {
+  // ✅ only status update
+  const saveStatus = async (id, status) => {
     try {
       setSavingId(id);
-      const res = await updateAdminUser(id, payload);
+      const res = await updateAdminUser(id, { status });
       const updated = res.data?.user;
 
       setUsers((prev) =>
-        prev.map((u) => (u._id === id ? (updated ? updated : { ...u, ...payload }) : u))
+        prev.map((u) =>
+          u._id === id ? (updated ? updated : { ...u, status }) : u
+        )
       );
     } catch (err) {
-      console.log("❌ update user error:", err.response?.data || err);
+      console.log("❌ update status error:", err.response?.data || err);
     } finally {
       setSavingId("");
     }
@@ -75,7 +80,7 @@ function AdminUsers() {
       <div className="au-head">
         <div>
           <h2 className="au-title">Users</h2>
-          <p className="au-sub">Search users, change role, block/unblock</p>
+          <p className="au-sub">Search users and block/unblock</p>
         </div>
 
         <button className="au-btn" onClick={loadUsers} disabled={loading}>
@@ -94,18 +99,11 @@ function AdminUsers() {
         </div>
 
         <div className="au-filter">
-          <label>Role</label>
-          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-            <option value="all">All</option>
-            <option value="user">User</option>
-            <option value="seller">Seller</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <div className="au-filter">
           <label>Status</label>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="all">All</option>
             <option value="active">Active</option>
             <option value="blocked">Blocked</option>
@@ -125,7 +123,6 @@ function AdminUsers() {
                 <th>User</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Update Role</th>
                 <th>Update Status</th>
               </tr>
             </thead>
@@ -143,21 +140,12 @@ function AdminUsers() {
                       <div className="au-mono au-muted">{u._id}</div>
                     </td>
 
-                    <td><span className={badge(role)}>{role}</span></td>
-
-                    <td><span className={stBadge(status)}>{status}</span></td>
+                    <td>
+                      <span className={badge(role)}>{role}</span>
+                    </td>
 
                     <td>
-                      <select
-                        className="au-select"
-                        value={role}
-                        disabled={savingId === u._id}
-                        onChange={(e) => save(u._id, { role: e.target.value })}
-                      >
-                        <option value="user">User</option>
-                        <option value="seller">Seller</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      <span className={stBadge(status)}>{status}</span>
                     </td>
 
                     <td>
@@ -165,13 +153,17 @@ function AdminUsers() {
                         className="au-select"
                         value={status}
                         disabled={savingId === u._id}
-                        onChange={(e) => save(u._id, { status: e.target.value })}
+                        onChange={(e) =>
+                          saveStatus(u._id, e.target.value)
+                        }
                       >
                         <option value="active">Active</option>
                         <option value="blocked">Blocked</option>
                       </select>
 
-                      {savingId === u._id && <span className="au-saving">Saving…</span>}
+                      {savingId === u._id && (
+                        <span className="au-saving">Saving…</span>
+                      )}
                     </td>
                   </tr>
                 );

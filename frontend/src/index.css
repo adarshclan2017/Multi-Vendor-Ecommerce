@@ -13,6 +13,7 @@ body {
     overflow-y: scroll;
     scrollbar-width: 0px;
     min-height: 100vh;
+    padding-top: 64px; /* same as navbar height */
 
 }
 

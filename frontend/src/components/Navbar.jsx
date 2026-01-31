@@ -6,20 +6,52 @@ function Navbar() {
   const token = localStorage.getItem("token");
 
   return (
-    <nav>
-      <div className="logo"><strong>...LOADING</strong></div>
-      <ul>
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/cart">Cart</Link></li>
-        <li><Link to="/order">Order</Link></li>
+    <nav className="nav">
+      <div className="logo">
+        <i className="fa-solid fa-store"></i>
+        <span>MyShop</span>
+      </div>
+
+      <ul className="nav-links">
+        <li>
+          <Link to="/">
+            <i className="fa-solid fa-house"></i> Home
+          </Link>
+        </li>
+
+        {token && (
+          <>
+            <li>
+              <Link to="/cart">
+                <i className="fa-solid fa-cart-shopping"></i> Cart
+              </Link>
+            </li>
+
+            <li>
+              <Link to="/order">
+                <i className="fa-solid fa-box"></i> Orders
+              </Link>
+            </li>
+          </>
+        )}
 
         {!token ? (
           <>
-            <li><Link to="/reg">Register</Link></li>
-            <li><Link to="/login">Login</Link></li>
+            <li>
+              <Link to="/reg">
+                <i className="fa-solid fa-user-plus"></i> Register
+              </Link>
+            </li>
+            <li>
+              <Link to="/login">
+                <i className="fa-solid fa-right-to-bracket"></i> Login
+              </Link>
+            </li>
           </>
         ) : (
-          <li><Logout /></li>
+          <li>
+            <Logout />
+          </li>
         )}
       </ul>
     </nav>

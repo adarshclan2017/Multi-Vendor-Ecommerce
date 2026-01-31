@@ -19,14 +19,12 @@ function AdminLayout() {
   useEffect(() => {
     // ❌ not logged in
     if (!auth.token || !auth.user) {
-      alert("Please login as admin");
       navigate("/login", { replace: true });
       return;
     }
 
     // ❌ not admin
     if (auth.user.role !== "admin") {
-      alert("Admin access only");
       navigate("/", { replace: true });
       return;
     }

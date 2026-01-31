@@ -9,11 +9,15 @@ function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ UI message
+  const [error, setError] = useState("");
+
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const res = await getMyOrders();
+      setError("");
 
+      const res = await getMyOrders();
       console.log("✅ MY ORDERS RESPONSE:", res.data);
 
       const list =
@@ -30,12 +34,12 @@ function MyOrders() {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-        console.log("Session expired. Please login again.");
+        setError("Session expired. Please login again.");
         navigate("/login", { replace: true });
         return;
       }
 
-      alert(err.response?.data?.message || "Failed to load orders");
+      setError(err.response?.data?.message || "Failed to load orders");
     } finally {
       setLoading(false);
     }
@@ -44,9 +48,7 @@ function MyOrders() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // ✅ ONLY token check
     if (!token) {
-     
       navigate("/login", { replace: true });
       return;
     }
@@ -83,6 +85,9 @@ function MyOrders() {
           ← Continue Shopping
         </Link>
       </div>
+
+      {/* ✅ Error message */}
+      {error && <div className="mo-error">{error}</div>}
 
       {loading ? (
         <p className="text-center mt-4">Loading...</p>
@@ -125,7 +130,7 @@ function MyOrders() {
 
                     const imgRaw = it?.image || it?.product?.image;
                     const img = imgRaw
-                      ? imgRaw.startsWith("http")
+                      ? String(imgRaw).startsWith("http")
                         ? imgRaw
                         : `http://localhost:5000${imgRaw}`
                       : "/no-image.png";
@@ -155,7 +160,6 @@ function MyOrders() {
                     Total: <b>₹ {total}</b>
                   </div>
 
-                  {/* ✅ Make sure this route exists in your router */}
                   <Link className="order-view" to={`/order/${orderId}`}>
                     View Details →
                   </Link>

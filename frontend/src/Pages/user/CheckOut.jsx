@@ -11,6 +11,10 @@ function Checkout() {
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
 
+  // ✅ UI messages (no alerts)
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
   const [address, setAddress] = useState({
     fullName: "",
     phone: "",
@@ -29,6 +33,9 @@ function Checkout() {
   const loadCart = async () => {
     try {
       setLoading(true);
+      setError("");
+      setSuccess("");
+
       const res = await getMyCart();
 
       const items =
@@ -40,14 +47,16 @@ function Checkout() {
       setCartItems(Array.isArray(items) ? items : []);
     } catch (err) {
       console.log("❌ load cart error:", err.response?.status, err.response?.data);
+
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
-       
+        setError("Session expired. Please login again.");
         navigate("/login", { replace: true });
         return;
       }
-      alert(err.response?.data?.message || "Failed to load cart");
+
+      setError(err.response?.data?.message || "Failed to load cart");
     } finally {
       setLoading(false);
     }
@@ -56,7 +65,6 @@ function Checkout() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-     
       navigate("/login", { replace: true });
       return;
     }
@@ -74,7 +82,13 @@ function Checkout() {
   }, [cartItems]);
 
   const handleChange = (e) => {
-    setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+
+    // ✅ clear messages while typing
+    if (error) setError("");
+    if (success) setSuccess("");
+
+    setAddress((prev) => ({ ...prev, [name]: value }));
   };
 
   const validate = () => {
@@ -90,10 +104,15 @@ function Checkout() {
 
   const handlePlaceOrder = async () => {
     const errMsg = validate();
-    if (errMsg) return alert(errMsg);
+    if (errMsg) {
+      setError(errMsg);
+      return;
+    }
 
     try {
       setPlacing(true);
+      setError("");
+      setSuccess("");
 
       const payload = {
         address,
@@ -106,12 +125,11 @@ function Checkout() {
 
       const res = await placeOrder(payload);
 
-      // ✅ supports {order:{_id}} or {_id}
       const orderId = res.data?.order?._id || res.data?._id;
 
       if (!orderId) {
         console.log("❌ OrderId missing:", res.data);
-       
+        setError("Order created but ID missing. Check My Orders.");
         return navigate("/my-orders", { replace: true });
       }
 
@@ -122,20 +140,22 @@ function Checkout() {
         // ignore cart clear errors
       }
 
-      alert("Order placed ✅");
+      setSuccess("Order placed successfully ✅");
 
-      // ✅ go to order details page
       navigate(`/order/${orderId}`, { replace: true });
     } catch (err) {
       console.log("❌ place order status:", err.response?.status);
       console.log("❌ place order data:", err.response?.data);
+
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        setError("Session expired. Please login again.");
         navigate("/login", { replace: true });
         return;
       }
-    
+
+      setError(err.response?.data?.message || "Failed to place order");
     } finally {
       setPlacing(false);
     }
@@ -153,6 +173,10 @@ function Checkout() {
           ← Back to Cart
         </Link>
       </div>
+
+      {/* ✅ Messages */}
+      {error && <div className="co-error">{error}</div>}
+      {success && <div className="co-success">{success}</div>}
 
       {loading ? (
         <p className="text-center mt-4">Loading...</p>
