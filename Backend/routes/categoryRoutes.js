@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Category = require("../models/Category"); // ✅ adjust path/name if different
+const Category = require("../models/category"); // ✅ adjust path/name if different
 
 // ✅ Public: show only active categories
 router.get("/", async (req, res) => {

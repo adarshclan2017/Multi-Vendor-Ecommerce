@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
-const Category = require("../models/Category");
+const Category = require("../models/category");
 const AdminSettings = require("../models/AdminSettings"); // ✅ add at top once
 
 
