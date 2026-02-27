@@ -54,7 +54,7 @@ export default function AdminOrderDetails() {
 
   const total = useMemo(() => {
     return order?.total ?? items.reduce((s, it) => s + Number(it.price || 0) * Number(it.qty || 0), 0);
-  }, [order, items]);
+  }, [order, items]);                                                       
 
   const getImg = (imgPath) => {
     if (!imgPath) return "/no-image.png";

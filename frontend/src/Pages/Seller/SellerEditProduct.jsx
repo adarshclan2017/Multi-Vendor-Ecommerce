@@ -4,6 +4,19 @@ import "../../styles/SellerEditProduct.css";
 import { getProductById, updateProduct } from "../../api/productapi";
 import { getPublicCategories } from "../../api/categoryApi";
 
+// ✅ Local fallback (NO external DNS)
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='18' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
 function SellerEditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,10 +33,11 @@ function SellerEditProduct() {
     stock: "",
     category: "",
     description: "",
-    image: null,
+    image: null, // new uploaded file
   });
 
-  const [currentImage, setCurrentImage] = useState("");
+  // ✅ store current image URL (Cloudinary)
+  const [currentImageUrl, setCurrentImageUrl] = useState("");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -50,20 +64,28 @@ function SellerEditProduct() {
         setSuccess("");
 
         const res = await getProductById(id);
+        const p = res.data?.product || res.data;
 
         setProduct({
-          name: res.data?.name || "",
-          price: res.data?.price ?? "",
-          stock: res.data?.stock ?? "",
-          description: res.data?.description || "",
+          name: p?.name || "",
+          price: p?.price ?? "",
+          stock: p?.stock ?? "",
+          description: p?.description || "",
           category:
-            typeof res.data?.category === "object"
-              ? res.data?.category?._id || ""
-              : res.data?.category || "",
+            typeof p?.category === "object"
+              ? p?.category?._id || ""
+              : p?.category || "",
           image: null,
         });
 
-        setCurrentImage(res.data?.image || "");
+        // ✅ handle new image format {url, publicId} or old string URL
+        const imgUrl =
+          p?.image?.url ||
+          (typeof p?.image === "string" && p.image.startsWith("http")
+            ? p.image
+            : "");
+
+        setCurrentImageUrl(imgUrl);
       } catch (err) {
         console.log("❌ load product error:", err.response?.data || err);
         setError("Failed to load product");
@@ -95,7 +117,6 @@ function SellerEditProduct() {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
-    // clear messages while editing
     if (error) setError("");
     if (success) setSuccess("");
 
@@ -154,7 +175,6 @@ function SellerEditProduct() {
         </button>
       </div>
 
-      {/* ✅ messages */}
       {error && <div className="sep-error">{error}</div>}
       {success && <div className="sep-success">{success}</div>}
 
@@ -238,15 +258,9 @@ function SellerEditProduct() {
               <div className="sep-imgBlock">
                 <div className="sep-imgTitle">Current</div>
                 <img
-                  src={
-                    currentImage
-                      ? `http://localhost:5000${currentImage}`
-                      : "https://via.placeholder.com/320x200"
-                  }
+                  src={currentImageUrl || FALLBACK_IMG}
                   alt="current"
-                  onError={(e) =>
-                    (e.currentTarget.src = "https://via.placeholder.com/320x200")
-                  }
+                  onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                 />
               </div>
 

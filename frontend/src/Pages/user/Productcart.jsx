@@ -8,13 +8,25 @@ import {
 } from "../../api/cartapi";
 import "../../styles/Productcart.css";
 
+// ✅ Local fallback (NO external domain)
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='18' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
 function Productcart() {
   const navigate = useNavigate();
 
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ one message box
   const [msg, setMsg] = useState({ type: "", text: "" });
 
   const showMsg = (type, text, ms = 3500) => {
@@ -22,12 +34,9 @@ function Productcart() {
     if (ms) setTimeout(() => setMsg({ type: "", text: "" }), ms);
   };
 
-  // ✅ update cart count in navbar (simple)
   const setNavCartCount = (items = []) => {
     const count = items.reduce((sum, it) => sum + Number(it.qty || 0), 0);
     localStorage.setItem("cartCount", String(count));
-
-    // ✅ same tab update for Navbar
     window.dispatchEvent(new Event("cartCountUpdated"));
   };
 
@@ -36,8 +45,6 @@ function Productcart() {
       setLoading(true);
       const res = await getMyCart();
       setCart(res.data);
-
-      // ✅ update navbar count
       setNavCartCount(res.data?.items || []);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -79,8 +86,6 @@ function Productcart() {
     try {
       const res = await updateCartItem(productId, qty);
       setCart(res.data);
-
-      // ✅ update navbar count
       setNavCartCount(res.data?.items || []);
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Update failed");
@@ -93,10 +98,7 @@ function Productcart() {
     try {
       const res = await removeCartItem(productId);
       setCart(res.data);
-
-      // ✅ update navbar count
       setNavCartCount(res.data?.items || []);
-
       showMsg("success", "Item removed ✅", 2500);
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Remove failed");
@@ -108,13 +110,8 @@ function Productcart() {
 
     try {
       await clearCart();
-
-      // ✅ update UI instantly
       setCart((prev) => (prev ? { ...prev, items: [] } : prev));
-
-      // ✅ update navbar count
       setNavCartCount([]);
-
       showMsg("success", "Cart cleared ✅", 2500);
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Clear failed");
@@ -130,7 +127,6 @@ function Productcart() {
       <div className="cart-header">
         <h2>My Cart</h2>
 
-        {/* ✅ hide clear button if cart empty */}
         {hasItems && (
           <button className="clear-btn" onClick={handleClear}>
             Clear Cart
@@ -138,7 +134,6 @@ function Productcart() {
         )}
       </div>
 
-      {/* ✅ message at top (not inside each item) */}
       {msg.text && (
         <p
           className={`cart-msg ${
@@ -156,14 +151,25 @@ function Productcart() {
           <div className="cart-items">
             {cart.items.map((it) => {
               const p = it.product;
-              const img = p?.image
-                ? `http://localhost:5000${p.image}`
-                : "https://via.placeholder.com/180";
+
+              // ✅ Cloudinary support
+              const img =
+                p?.image?.url ||
+                (typeof p?.image === "string" && p.image.startsWith("http")
+                  ? p.image
+                  : null) ||
+                FALLBACK_IMG;
 
               return (
                 <div className="cart-item" key={p?._id}>
                   <div className="cart-img">
-                    <img src={img} alt={p?.name || "Product"} />
+                    <img
+                      src={img}
+                      alt={p?.name || "Product"}
+                      onError={(e) =>
+                        (e.currentTarget.src = FALLBACK_IMG)
+                      }
+                    />
                   </div>
 
                   <div className="cart-info">

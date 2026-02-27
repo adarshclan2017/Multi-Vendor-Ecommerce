@@ -4,6 +4,19 @@ import "../../styles/CheckOut.css";
 import { getMyCart, clearCart } from "../../api/cartapi";
 import { placeOrder } from "../../api/orderapi";
 
+/* ✅ Local SVG fallback (NO DNS issues) */
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='14' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
 function Checkout() {
   const navigate = useNavigate();
 
@@ -11,7 +24,6 @@ function Checkout() {
   const [loading, setLoading] = useState(true);
   const [placing, setPlacing] = useState(false);
 
-  // ✅ UI messages (no alerts)
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -24,10 +36,21 @@ function Checkout() {
     pincode: "",
   });
 
-  const getImg = (imgPath) => {
-    if (!imgPath) return "/no-image.png";
-    if (String(imgPath).startsWith("http")) return imgPath;
-    return `http://localhost:5000${imgPath}`;
+  /* ✅ Cloudinary-safe image resolver */
+  const resolveImage = (imgRaw) => {
+    if (!imgRaw) return FALLBACK_IMG;
+
+    // Case 1: { url, publicId }
+    if (typeof imgRaw === "object" && imgRaw.url) {
+      return String(imgRaw.url);
+    }
+
+    // Case 2: direct URL
+    if (typeof imgRaw === "string" && imgRaw.startsWith("http")) {
+      return imgRaw;
+    }
+
+    return FALLBACK_IMG;
   };
 
   const loadCart = async () => {
@@ -41,7 +64,6 @@ function Checkout() {
       const items =
         res.data?.items ||
         res.data?.cart?.items ||
-        res.data?.data ||
         (Array.isArray(res.data) ? res.data : []);
 
       setCartItems(Array.isArray(items) ? items : []);
@@ -84,7 +106,6 @@ function Checkout() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // ✅ clear messages while typing
     if (error) setError("");
     if (success) setSuccess("");
 
@@ -117,7 +138,7 @@ function Checkout() {
       const payload = {
         address,
         items: cartItems.map((i) => ({
-          productId: i?.product?._id ?? i?.productId ?? i?._id,
+          productId: i?.product?._id ?? i?._id,
           qty: i?.qty ?? i?.quantity ?? 1,
         })),
         total,
@@ -128,24 +149,19 @@ function Checkout() {
       const orderId = res.data?.order?._id || res.data?._id;
 
       if (!orderId) {
-        console.log("❌ OrderId missing:", res.data);
         setError("Order created but ID missing. Check My Orders.");
         return navigate("/my-orders", { replace: true });
       }
 
-      // ✅ optional: clear cart
       try {
         await clearCart();
-      } catch (e) {
-        // ignore cart clear errors
-      }
+      } catch (e) {}
 
       setSuccess("Order placed successfully ✅");
 
       navigate(`/order/${orderId}`, { replace: true });
     } catch (err) {
-      console.log("❌ place order status:", err.response?.status);
-      console.log("❌ place order data:", err.response?.data);
+      console.log("❌ place order:", err.response?.data || err);
 
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -166,7 +182,9 @@ function Checkout() {
       <div className="checkout-head">
         <div>
           <h3 className="mb-1">Checkout</h3>
-          <p className="text-muted mb-0">Confirm address and place your order</p>
+          <p className="text-muted mb-0">
+            Confirm address and place your order
+          </p>
         </div>
 
         <Link to="/cart" className="back-cart">
@@ -174,7 +192,6 @@ function Checkout() {
         </Link>
       </div>
 
-      {/* ✅ Messages */}
       {error && <div className="co-error">{error}</div>}
       {success && <div className="co-success">{success}</div>}
 
@@ -187,67 +204,18 @@ function Checkout() {
             <h5 className="card-title">Shipping Address</h5>
 
             <div className="form-grid">
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  name="fullName"
-                  value={address.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter full name"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Phone</label>
-                <input
-                  name="phone"
-                  value={address.phone}
-                  onChange={handleChange}
-                  placeholder="10 digit mobile number"
-                  inputMode="numeric"
-                />
-              </div>
-
-              <div className="form-group form-wide">
-                <label>Street Address</label>
-                <input
-                  name="street"
-                  value={address.street}
-                  onChange={handleChange}
-                  placeholder="House, street, area"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>City</label>
-                <input
-                  name="city"
-                  value={address.city}
-                  onChange={handleChange}
-                  placeholder="City"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>State</label>
-                <input
-                  name="state"
-                  value={address.state}
-                  onChange={handleChange}
-                  placeholder="State"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Pincode</label>
-                <input
-                  name="pincode"
-                  value={address.pincode}
-                  onChange={handleChange}
-                  placeholder="6 digit pincode"
-                  inputMode="numeric"
-                />
-              </div>
+              {["fullName", "phone", "street", "city", "state", "pincode"].map(
+                (field) => (
+                  <div className="form-group" key={field}>
+                    <label>{field}</label>
+                    <input
+                      name={field}
+                      value={address[field]}
+                      onChange={handleChange}
+                    />
+                  </div>
+                )
+              )}
             </div>
           </div>
 
@@ -266,9 +234,11 @@ function Checkout() {
                   return (
                     <div className="summary-item" key={p?._id || idx}>
                       <img
-                        src={getImg(p?.image)}
+                        src={resolveImage(p?.image)}
                         alt={p?.name || "Item"}
-                        onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                        onError={(e) =>
+                          (e.currentTarget.src = FALLBACK_IMG)
+                        }
                       />
 
                       <div className="summary-info">

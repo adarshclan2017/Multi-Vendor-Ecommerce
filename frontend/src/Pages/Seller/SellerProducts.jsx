@@ -3,6 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { getMyProducts, deleteProduct } from "../../api/productapi";
 import "../../styles/SellerProducts.css";
 
+// ✅ Local fallback (NO external DNS)
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='20' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
 function SellerProducts() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -53,18 +66,30 @@ function SellerProducts() {
 
   const getCategoryName = (p) => {
     if (!p?.category) return "Uncategorized";
-    if (typeof p.category === "object") return p.category?.name || "Uncategorized";
+    if (typeof p.category === "object")
+      return p.category?.name || "Uncategorized";
     return String(p.category);
   };
 
-  // ✅ open confirm modal
+  // ✅ Build correct image URL (Cloudinary + safe fallback)
+  const getImg = (p) => {
+    // new format: { url, publicId }
+    if (p?.image?.url) return p.image.url;
+
+    // old format: direct string url
+    if (typeof p?.image === "string" && p.image.startsWith("http"))
+      return p.image;
+
+    // if old "/uploads/..." exists, we cannot use  in production
+    return FALLBACK_IMG;
+  };
+
   const askDelete = (p) => {
     setError("");
     setSuccess("");
     setConfirmDel({ _id: p._id, name: p.name });
   };
 
-  // ✅ confirm delete
   const confirmDelete = async () => {
     if (!confirmDel?._id) return;
 
@@ -76,7 +101,6 @@ function SellerProducts() {
 
       await deleteProduct(confirmDel._id);
 
-      // ✅ instant UI update
       setProducts((prev) => prev.filter((x) => x._id !== confirmDel._id));
       setConfirmDel(null);
       flashSuccess("Product deleted successfully ✅");
@@ -104,12 +128,14 @@ function SellerProducts() {
           <p className="subtext">Manage your products and stock</p>
         </div>
 
-        <button className="add-btn" onClick={() => navigate("/seller/addproduct")}>
+        <button
+          className="add-btn"
+          onClick={() => navigate("/seller/addproduct")}
+        >
           + Add Product
         </button>
       </div>
 
-      {/* ✅ Messages */}
       {error && <div className="sp-error">{error}</div>}
       {success && <div className="sp-success">{success}</div>}
 
@@ -123,15 +149,10 @@ function SellerProducts() {
             <div className="product-card" key={p._id}>
               <div className="img-box">
                 <img
-                  src={
-                    p.image
-                      ? `http://localhost:5000${p.image}`
-                      : "https://via.placeholder.com/300"
-                  }
+                  src={getImg(p)}
                   alt={p.name}
-                  onError={(e) =>
-                    (e.currentTarget.src = "https://via.placeholder.com/300")
-                  }
+                  loading="lazy"
+                  onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                 />
               </div>
 
@@ -159,7 +180,10 @@ function SellerProducts() {
               </div>
 
               <div className="actions">
-                <button className="edit" onClick={() => navigate(`/seller/edit/${p._id}`)}>
+                <button
+                  className="edit"
+                  onClick={() => navigate(`/seller/edit/${p._id}`)}
+                >
                   Edit
                 </button>
 
@@ -178,7 +202,6 @@ function SellerProducts() {
         </div>
       )}
 
-      {/* ✅ Delete Confirm Modal (NO browser popup) */}
       {confirmDel && (
         <div
           className="sp-modalOverlay"

@@ -4,6 +4,19 @@ import "../../styles/AdminEditProduct.css";
 import { updateAdminProduct, getAdminProductById } from "../../api/adminApi";
 import { getAdminCategories } from "../../api/adminCategoryApi";
 
+/* ✅ Local SVG fallback (no external DNS / no missing file) */
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='16' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
 export default function AdminEditProduct() {
   const nav = useNavigate();
   const { id } = useParams();
@@ -19,11 +32,10 @@ export default function AdminEditProduct() {
     stock: "",
     category: "",
     description: "",
-    image: "",
+    image: null, // ✅ can be string OR object
   });
 
   const [imageFile, setImageFile] = useState(null);
-
   const [error, setError] = useState("");
 
   // ✅ Load categories
@@ -38,18 +50,29 @@ export default function AdminEditProduct() {
     }
   };
 
+  // ✅ Resolve server image (Cloudinary-safe)
+  const resolveImage = (imgRaw) => {
+    if (!imgRaw) return "";
+
+    // Cloudinary object { url, publicId }
+    if (typeof imgRaw === "object" && imgRaw.url) return String(imgRaw.url);
+
+    // direct URL string
+    if (typeof imgRaw === "string" && imgRaw.startsWith("http"))
+      return imgRaw;
+
+    // old /uploads path -> not used anymore
+    return "";
+  };
+
   // ✅ Image preview (file > server image)
   const imagePreview = useMemo(() => {
     if (imageFile) return URL.createObjectURL(imageFile);
-
-    if (form.image) {
-      if (String(form.image).startsWith("http")) return form.image;
-      return `http://localhost:5000${form.image}`;
-    }
-    return "";
+    const serverImg = resolveImage(form.image);
+    return serverImg || "";
   }, [imageFile, form.image]);
 
-  // ✅ Clean up created object URL (avoid memory leak)
+  // ✅ Clean up object URL
   useEffect(() => {
     if (!imageFile) return;
     const url = URL.createObjectURL(imageFile);
@@ -80,7 +103,7 @@ export default function AdminEditProduct() {
         stock: p.stock ?? "",
         category: categoryId,
         description: p.description || "",
-        image: p.image || "",
+        image: p.image || null, // ✅ keep as object or string
       });
     } catch (err) {
       console.log("❌ load product error:", err.response?.data || err);
@@ -104,10 +127,7 @@ export default function AdminEditProduct() {
 
   const onChange = (e) => {
     const { name, value } = e.target;
-
-    // optional: clear error when user edits
     if (error) setError("");
-
     setForm((p) => ({ ...p, [name]: value }));
   };
 
@@ -129,6 +149,8 @@ export default function AdminEditProduct() {
       fd.append("stock", String(form.stock));
       fd.append("category", form.category);
       fd.append("description", form.description || "");
+
+      // ✅ only send new image if user selected file
       if (imageFile) fd.append("image", imageFile);
 
       await updateAdminProduct(id, fd);
@@ -156,7 +178,6 @@ export default function AdminEditProduct() {
         </Link>
       </div>
 
-      {/* ✅ Error message UI */}
       {error && <div className="aep-error">{error}</div>}
 
       {loading ? (
@@ -166,12 +187,7 @@ export default function AdminEditProduct() {
           <div className="aep-grid">
             <div className="aep-field">
               <label>Product Name *</label>
-              <input
-                name="name"
-                value={form.name}
-                onChange={onChange}
-                required
-              />
+              <input name="name" value={form.name} onChange={onChange} required />
             </div>
 
             <div className="aep-field">
@@ -274,10 +290,10 @@ export default function AdminEditProduct() {
                     className="aep-preview"
                     src={imagePreview}
                     alt="preview"
-                    onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                   />
                 ) : (
-                  <div className="aep-placeholder">No image</div>
+                  <img className="aep-preview" src={FALLBACK_IMG} alt="no" />
                 )}
               </div>
             </div>

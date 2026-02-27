@@ -6,7 +6,18 @@ import { getProductById, addReview } from "../../api/productapi";
 import { addToCart } from "../../api/cartapi";
 import Stars from "../../components/Stars";
 
-const FALLBACK_IMG = "https://via.placeholder.com/1200x900?text=No+Image";
+// ✅ Local fallback (NO external DNS)
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='1200' height='900'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='40' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -16,8 +27,7 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
 
   const [adding, setAdding] = useState(false);
-  const [errors, setErrors] = useState({})
-
+  const [errors, setErrors] = useState({});
 
   // ✅ Gallery states
   const [activeImg, setActiveImg] = useState("");
@@ -41,22 +51,34 @@ export default function ProductDetails() {
 
   const outOfStock = Number(product?.stock) <= 0;
 
-  // ✅ Build images array (supports: image, images[0], full urls, local paths)
+  // ✅ Build images array (supports: image.url, image string, images[] with url/string)
   const images = useMemo(() => {
     const list = [];
 
     const pushImg = (img) => {
       if (!img) return;
+
+      // new format: {url, publicId}
+      if (typeof img === "object" && img.url) {
+        list.push(String(img.url));
+        return;
+      }
+
+      // old format: string URL
       const s = String(img);
+
+      // if already full URL (cloudinary/http)
       if (s.startsWith("http")) list.push(s);
-      else list.push(`http://localhost:5000${s}`);
+      else {
+        // if some leftover /uploads/... exists, we cannot guess backend URL here
+        // so we ignore it and fallback will show
+      }
     };
 
     pushImg(product?.image);
     (product?.images || []).forEach(pushImg);
 
-    // remove duplicates
-    const uniq = Array.from(new Set(list));
+    const uniq = Array.from(new Set(list)).filter(Boolean);
     return uniq.length ? uniq : [FALLBACK_IMG];
   }, [product?.image, product?.images]);
 
@@ -112,7 +134,7 @@ export default function ProductDetails() {
     const token = localStorage.getItem("token");
     if (!token) return nav("/login");
 
-    if (!rating || rating < 1 || rating > 5) return
+    if (!rating || rating < 1 || rating > 5) return;
 
     try {
       setReviewing(true);
@@ -120,9 +142,12 @@ export default function ProductDetails() {
       setProduct(res.data?.product || res.data?.updatedProduct || res.data);
       setRating(5);
       setComment("");
+      setErrors({});
     } catch (err) {
       console.log("❌ review error:", err.response?.data || err);
-      setErrors({ message: err.response?.data?.message || "Failed to add review" });
+      setErrors({
+        message: err.response?.data?.message || "Failed to add review",
+      });
     } finally {
       setReviewing(false);
     }
@@ -232,14 +257,17 @@ export default function ProductDetails() {
           <div className="pd-ratingRow">
             <Stars value={product?.rating || 0} size={18} />
             <span className="pd-ratingText">
-              {Number(product?.rating || 0).toFixed(1)} / 5 • {product?.numReviews || 0} reviews
+              {Number(product?.rating || 0).toFixed(1)} / 5 •{" "}
+              {product?.numReviews || 0} reviews
             </span>
           </div>
 
           {categoryName ? <div className="pd-cat">{categoryName}</div> : null}
 
           <p className="pd-desc">
-            {product?.description ? product.description : "No description provided."}
+            {product?.description
+              ? product.description
+              : "No description provided."}
           </p>
 
           <div className="pd-actions">
@@ -263,7 +291,10 @@ export default function ProductDetails() {
 
             <div className="pd-reviewForm">
               <label>Rating</label>
-              <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
+              <select
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
+              >
                 {[5, 4, 3, 2, 1].map((r) => (
                   <option key={r} value={r}>
                     {r} Star{r > 1 ? "s" : ""}
@@ -278,7 +309,9 @@ export default function ProductDetails() {
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Write your feedback..."
               />
-              {errors.message && <p className="error text-danger">{errors.message}</p>}
+              {errors.message && (
+                <p className="error text-danger">{errors.message}</p>
+              )}
               <button onClick={submitReview} disabled={reviewing}>
                 {reviewing ? "Posting..." : "Post Review"}
               </button>
@@ -296,7 +329,9 @@ export default function ProductDetails() {
                     </div>
                     <p>{r.comment || "—"}</p>
                     <span className="pd-date">
-                      {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ""}
+                      {r.createdAt
+                        ? new Date(r.createdAt).toLocaleDateString()
+                        : ""}
                     </span>
                   </div>
                 ))}
@@ -326,7 +361,6 @@ export default function ProductDetails() {
               onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
             />
 
-            {/* optional: next/prev */}
             {images.length > 1 && (
               <div className="pd-modalNav">
                 <button

@@ -3,6 +3,19 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import "../../styles/OrderDetails.css";
 import { getOrderById, cancelOrder } from "../../api/orderapi";
 
+// ✅ Local fallback (NO external DNS)
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='18' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
 function OrderDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -11,11 +24,9 @@ function OrderDetails() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
-  // ✅ UI messages
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ✅ custom confirm state (no window.confirm)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const loadOrder = async () => {
@@ -27,7 +38,11 @@ function OrderDetails() {
       const o = res.data?.order || res.data?.data || res.data;
       setOrder(o || null);
     } catch (err) {
-      console.log("❌ Order details error:", err.response?.status, err.response?.data);
+      console.log(
+        "❌ Order details error:",
+        err.response?.status,
+        err.response?.data
+      );
 
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
@@ -71,15 +86,25 @@ function OrderDetails() {
     );
   }, [order, items]);
 
-  const getImg = (imgPath) => {
-    if (!imgPath) return "/no-image.png";
-    if (String(imgPath).startsWith("http")) return imgPath;
-    return `http://localhost:5000${imgPath}`;
+  // ✅ Cloudinary-safe image resolver
+  // supports:
+  // - it.image = "https://..."
+  // - it.image = { url, publicId }
+  const getImg = (imgValue) => {
+    if (!imgValue) return FALLBACK_IMG;
+
+    if (typeof imgValue === "object" && imgValue.url) {
+      return String(imgValue.url);
+    }
+
+    const s = String(imgValue);
+    if (s.startsWith("http")) return s;
+
+    return FALLBACK_IMG;
   };
 
   const canCancel = String(order?.status || "").toLowerCase() === "pending";
 
-  // ✅ step 1: open confirm UI
   const handleCancelClick = () => {
     if (!order?._id || !canCancel) return;
     setError("");
@@ -87,7 +112,6 @@ function OrderDetails() {
     setShowCancelConfirm(true);
   };
 
-  // ✅ step 2: user confirms -> cancel
   const confirmCancel = async () => {
     if (!order?._id || !canCancel) return;
 
@@ -127,23 +151,27 @@ function OrderDetails() {
         </Link>
       </div>
 
-      {/* ✅ Messages */}
       {error && <div className="od-error">{error}</div>}
       {success && <div className="od-success">{success}</div>}
 
-      {/* ✅ Custom confirm box (NO browser popup) */}
       {showCancelConfirm && (
         <div className="od-confirm">
           <div className="od-confirm-title">Cancel this order?</div>
-          <div className="od-confirm-sub">
-            This action cannot be undone.
-          </div>
+          <div className="od-confirm-sub">This action cannot be undone.</div>
 
           <div className="od-confirm-actions">
-            <button className="od-confirm-no" onClick={closeConfirm} disabled={cancelling}>
+            <button
+              className="od-confirm-no"
+              onClick={closeConfirm}
+              disabled={cancelling}
+            >
               No
             </button>
-            <button className="od-confirm-yes" onClick={confirmCancel} disabled={cancelling}>
+            <button
+              className="od-confirm-yes"
+              onClick={confirmCancel}
+              disabled={cancelling}
+            >
               {cancelling ? "Cancelling..." : "Yes, Cancel"}
             </button>
           </div>
@@ -160,7 +188,9 @@ function OrderDetails() {
             <div className="od-toprow">
               <div className="od-meta">
                 Status:{" "}
-                <span className={`od-st od-${String(order.status || "pending").toLowerCase()}`}>
+                <span
+                  className={`od-st od-${String(order.status || "pending").toLowerCase()}`}
+                >
                   {order.status || "pending"}
                 </span>
               </div>
@@ -186,7 +216,7 @@ function OrderDetails() {
                   <img
                     src={getImg(it.image)}
                     alt={it.name || "Item"}
-                    onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                   />
 
                   <div className="od-info">
@@ -212,7 +242,8 @@ function OrderDetails() {
               </p>
               <p>{order.address?.street}</p>
               <p>
-                {order.address?.city}, {order.address?.state} - {order.address?.pincode}
+                {order.address?.city}, {order.address?.state} -{" "}
+                {order.address?.pincode}
               </p>
               <p>📞 {order.address?.phone}</p>
             </div>
