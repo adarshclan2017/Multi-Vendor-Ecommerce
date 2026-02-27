@@ -6,7 +6,9 @@ const path = require("path");
 
 dotenv.config();
 
-console.log("✅ DEPLOY CHECK: running Backend/server.js (NO STAR OPTIONS) - 2026-02-27");
+console.log(
+  "✅ DEPLOY CHECK: running Backend/server.js (NO STAR OPTIONS) - 2026-02-27"
+);
 
 const app = express();
 
@@ -14,24 +16,39 @@ const app = express();
    ✅ CORS (RENDER + VERCEL SAFE)
    ============================== */
 
+// ✅ Add your fixed production domain(s) here
 const allowedOrigins = new Set([
   "http://localhost:5173",
   "https://multi-vendor-ecommerce-pink.vercel.app",
 ]);
+
+// ✅ Allow all Vercel preview deployments (*.vercel.app)
+const isAllowedVercelDomain = (origin) => {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname.endsWith(".vercel.app");
+  } catch (e) {
+    return false;
+  }
+};
 
 const corsOptions = {
   origin: (origin, cb) => {
     // allow requests with no origin (Postman, server-to-server)
     if (!origin) return cb(null, true);
 
+    // allow exact whitelisted origins
     if (allowedOrigins.has(origin)) return cb(null, true);
+
+    // allow vercel preview urls
+    if (isAllowedVercelDomain(origin)) return cb(null, true);
 
     // block unknown origins
     return cb(new Error("Not allowed by CORS: " + origin));
   },
 
-  // ✅ Keep true ONLY if you use cookies (sessions).
-  // If you're using JWT in Authorization header, set this to false.
+  // ✅ Keep true ONLY if you use cookies.
+  // If you use JWT in Authorization header only, you can set this to false.
   credentials: true,
 
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -57,7 +74,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /* ==============================
-   ✅ STATIC FILES
+   ✅ STATIC FILES (keep if needed)
    ============================== */
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -71,7 +88,6 @@ app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/cart", require("./routes/cartRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
-
 
 // ✅ Seller routes
 app.use("/api/seller", require("./routes/sellerAnalyticsRoutes"));
