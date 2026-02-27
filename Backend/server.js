@@ -10,23 +10,32 @@ dotenv.config();
 const app = express();
 
 /* ==============================
-   ✅ CORS (UPDATED SIMPLE FIX)
+   ✅ CORS (PRODUCTION SAFE)
    ============================== */
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://multi-vendor-ecommerce-pink.vercel.app",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://multi-vendor-ecommerce-pink.vercel.app",
+];
 
-// ✅ Preflight
-app.options("*", cors());
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests without origin (Postman, mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error("Not allowed by CORS: " + origin));
+    }
+  },
+  credentials: true, // keep true ONLY if using cookies
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // ✅ Fix for preflight
 
 /* ==============================
    ✅ BODY PARSERS
