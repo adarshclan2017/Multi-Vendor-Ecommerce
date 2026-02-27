@@ -1,5 +1,5 @@
-const Order = require("../models/order");
-const Product = require("../models/product");
+const Order = require("../models/Order");
+const Product = require("../models/Product");
 
 exports.getSellerAnalytics = async (req, res) => {
   try {
