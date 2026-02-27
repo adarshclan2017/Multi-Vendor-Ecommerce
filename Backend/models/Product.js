@@ -20,7 +20,11 @@ const productSchema = new mongoose.Schema(
     // ✅ category ref
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
 
-    image: { type: String, default: "" },
+    // ✅ Cloudinary image storage
+    image: {
+      url: { type: String, default: "" },      // Cloudinary URL
+      publicId: { type: String, default: "" }, // Cloudinary public_id
+    },
 
     seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 

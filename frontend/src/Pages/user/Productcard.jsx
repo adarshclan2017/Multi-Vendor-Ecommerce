@@ -10,9 +10,10 @@ export default function Productcard({ Product }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const imageUrl = Product?.image
-    ? `http://localhost:5000${Product.image}`
-    : "https://via.placeholder.com/600x600?text=No+Image";
+  // ✅ Cloudinary image support
+  const imageUrl =
+    Product?.image?.url ||
+    "https://via.placeholder.com/600x600?text=No+Image";
 
   // ✅ category name safe
   const categoryName = useMemo(() => {
@@ -44,13 +45,11 @@ export default function Productcard({ Product }) {
       await addToCart(Product._id, 1);
       setSuccess("Added to cart successfully ✅");
 
-      // auto clear success
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       console.error("❌ Add to cart error:", err);
       setError(err.response?.data?.message || "Add to cart failed");
 
-      // auto clear error
       setTimeout(() => setError(""), 4000);
     }
   };
@@ -103,7 +102,6 @@ export default function Productcard({ Product }) {
             </span>
           </div>
 
-          {/* ✅ Message area */}
           {error && <p className="pc-msg pc-msg--error">{error}</p>}
           {success && <p className="pc-msg pc-msg--success">{success}</p>}
 

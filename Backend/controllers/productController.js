@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Category = require("../models/category");
-const AdminSettings = require("../models/AdminSettings"); // ✅ add at top once
+const AdminSettings = require("../models/AdminSettings");
 
-
+// ✅ Cloudinary
+const cloudinary = require("../config/cloudinary");
 
 // =========================
 // HELPERS
@@ -36,13 +37,53 @@ const resolveActiveCategoryId = async (categoryValue) => {
   return cat._id;
 };
 
+// safely parse image object from req.body (Cloudinary)
+const parseImage = (value) => {
+  // value may already be object (axios sends JSON)
+  if (!value) return null;
+
+  if (typeof value === "object") {
+    const url = String(value.url || "").trim();
+    const publicId = String(value.publicId || "").trim();
+    if (!url) return null;
+    return { url, publicId };
+  }
+
+  // sometimes frontend sends JSON string
+  if (typeof value === "string") {
+    try {
+      const obj = JSON.parse(value);
+      const url = String(obj?.url || "").trim();
+      const publicId = String(obj?.publicId || "").trim();
+      if (!url) return null;
+      return { url, publicId };
+    } catch {
+      // if someone sends plain url string (not recommended)
+      const url = String(value || "").trim();
+      if (!url) return null;
+      return { url, publicId: "" };
+    }
+  }
+
+  return null;
+};
+
+const deleteCloudinaryByPublicId = async (publicId) => {
+  try {
+    if (!publicId) return;
+    await cloudinary.uploader.destroy(publicId);
+  } catch (e) {
+    // don't fail the request if image delete fails
+    console.log("⚠️ Cloudinary destroy failed:", e.message);
+  }
+};
+
 // =========================
 // PUBLIC
 // =========================
 
 // ✅ Public: all products (ONLY active categories)
 // - shows product if category is null OR category.status === active
-
 exports.getProducts = async (req, res) => {
   try {
     // ✅ read settings (create default if not exists)
@@ -66,7 +107,6 @@ exports.getProducts = async (req, res) => {
       settings.hideInactiveCategoryProducts === false
         ? products
         : (products || []).filter((p) => {
-            // show if no category OR category is active
             if (!p.category) return true;
             return p.category.status === "active";
           });
@@ -77,7 +117,6 @@ exports.getProducts = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // ✅ Public: single product (BLOCK if category inactive)
 exports.getProductById = async (req, res) => {
@@ -118,6 +157,7 @@ exports.getProductById = async (req, res) => {
 // =========================
 
 // ✅ Seller: create product (category must be ACTIVE)
+// ✅ image comes from JSON: req.body.image = { url, publicId }
 exports.createProduct = async (req, res) => {
   try {
     const { name, description, price, stock, category } = req.body;
@@ -138,7 +178,12 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
+    const imageObj = parseImage(req.body.image); // { url, publicId } | null
+    if (!imageObj?.url) {
+      return res.status(400).json({
+        message: "Product image is required. Upload to Cloudinary and send {url, publicId}.",
+      });
+    }
 
     const product = await Product.create({
       name: String(name).trim(),
@@ -146,7 +191,7 @@ exports.createProduct = async (req, res) => {
       price: Number(price),
       stock: Number(stock),
       category: categoryId || undefined,
-      image: imagePath,
+      image: { url: imageObj.url, publicId: imageObj.publicId || "" },
       seller: req.user._id,
     });
 
@@ -176,6 +221,7 @@ exports.getMyProducts = async (req, res) => {
 };
 
 // ✅ Seller: update my product (category must be ACTIVE if changed)
+// ✅ if new image is sent, delete old cloudinary image
 exports.updateMyProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -215,7 +261,27 @@ exports.updateMyProduct = async (req, res) => {
       }
     }
 
-    if (req.file) product.image = `/uploads/${req.file.filename}`;
+    // ✅ image update (cloudinary)
+    if (req.body.image !== undefined) {
+      const newImage = parseImage(req.body.image);
+
+      // allow clearing image (not recommended)
+      if (!newImage?.url) {
+        // if they explicitly send empty, keep current OR clear (choose one)
+        // Here: keep current if empty was sent
+      } else {
+        const oldPublicId = product.image?.publicId;
+        product.image = {
+          url: newImage.url,
+          publicId: newImage.publicId || "",
+        };
+
+        // delete old image after setting new one
+        if (oldPublicId && oldPublicId !== product.image.publicId) {
+          await deleteCloudinaryByPublicId(oldPublicId);
+        }
+      }
+    }
 
     await product.save();
 
@@ -230,7 +296,7 @@ exports.updateMyProduct = async (req, res) => {
   }
 };
 
-// ✅ Seller: delete my product
+// ✅ Seller: delete my product (also delete cloudinary image)
 exports.deleteMyProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -247,6 +313,9 @@ exports.deleteMyProduct = async (req, res) => {
         .status(403)
         .json({ message: "You can delete only your products" });
     }
+
+    // delete cloudinary image
+    await deleteCloudinaryByPublicId(product.image?.publicId);
 
     await product.deleteOne();
     res.json({ message: "Product deleted ✅" });
@@ -294,6 +363,7 @@ exports.adminGetProductById = async (req, res) => {
   }
 };
 
+// ✅ Admin: create product (image from JSON)
 exports.adminCreateProduct = async (req, res) => {
   try {
     const { name, description, price, stock, category, seller } = req.body;
@@ -313,7 +383,12 @@ exports.adminCreateProduct = async (req, res) => {
       }
     }
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : "";
+    const imageObj = parseImage(req.body.image);
+    if (!imageObj?.url) {
+      return res.status(400).json({
+        message: "Product image is required. Upload to Cloudinary and send {url, publicId}.",
+      });
+    }
 
     const product = await Product.create({
       name: String(name).trim(),
@@ -321,7 +396,7 @@ exports.adminCreateProduct = async (req, res) => {
       price: Number(price),
       stock: Number(stock),
       category: categoryId || undefined,
-      image: imagePath,
+      image: { url: imageObj.url, publicId: imageObj.publicId || "" },
       seller: seller || req.user._id,
     });
 
@@ -336,6 +411,7 @@ exports.adminCreateProduct = async (req, res) => {
   }
 };
 
+// ✅ Admin: update product (delete old cloudinary if changed)
 exports.adminUpdateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -368,7 +444,23 @@ exports.adminUpdateProduct = async (req, res) => {
     }
 
     if (seller !== undefined) product.seller = seller;
-    if (req.file) product.image = `/uploads/${req.file.filename}`;
+
+    // ✅ image update
+    if (req.body.image !== undefined) {
+      const newImage = parseImage(req.body.image);
+      if (newImage?.url) {
+        const oldPublicId = product.image?.publicId;
+
+        product.image = {
+          url: newImage.url,
+          publicId: newImage.publicId || "",
+        };
+
+        if (oldPublicId && oldPublicId !== product.image.publicId) {
+          await deleteCloudinaryByPublicId(oldPublicId);
+        }
+      }
+    }
 
     await product.save();
 
@@ -383,6 +475,7 @@ exports.adminUpdateProduct = async (req, res) => {
   }
 };
 
+// ✅ Admin: delete product (also delete cloudinary image)
 exports.adminDeleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -393,6 +486,8 @@ exports.adminDeleteProduct = async (req, res) => {
 
     const product = await Product.findById(id);
     if (!product) return res.status(404).json({ message: "Product not found" });
+
+    await deleteCloudinaryByPublicId(product.image?.publicId);
 
     await product.deleteOne();
     res.json({ message: "Product deleted ✅" });
@@ -413,7 +508,10 @@ exports.addProductReview = async (req, res) => {
     const already = product.reviews.find(
       (r) => String(r.user) === String(req.user._id)
     );
-    if (already) return res.status(400).json({ message: "You already reviewed this product" });
+    if (already)
+      return res
+        .status(400)
+        .json({ message: "You already reviewed this product" });
 
     const review = {
       user: req.user._id,
@@ -429,7 +527,8 @@ exports.addProductReview = async (req, res) => {
     product.reviews.push(review);
     product.numReviews = product.reviews.length;
     product.rating =
-      product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length;
+      product.reviews.reduce((acc, r) => acc + r.rating, 0) /
+      product.reviews.length;
 
     await product.save();
 

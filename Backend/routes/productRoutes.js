@@ -1,14 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { addProductReview } = require("../controllers/productController");
 
-// ✅ FIX: correct upload middleware filename
-const upload = require("../middleware/uploadMiddleware");
-
-// ✅ auth middlewares
 const { protect, sellerOnly } = require("../middleware/authMiddleware");
 
-// ✅ controllers (must exist and be exported)
 const {
   getProducts,
   getProductById,
@@ -16,6 +10,7 @@ const {
   getMyProducts,
   updateMyProduct,
   deleteMyProduct,
+  addProductReview,
 } = require("../controllers/productController");
 
 // ✅ Public
@@ -26,13 +21,15 @@ router.get("/seller/me", protect, sellerOnly, getMyProducts);
 
 // ✅ Public: single product
 router.get("/:id", getProductById);
+
+// ✅ Reviews
 router.post("/:id/reviews", protect, addProductReview);
 
-// ✅ Seller: create product (with image)
-router.post("/", protect, sellerOnly, upload.single("image"), createProduct);
+// ✅ Seller: create product (image will come as JSON: { image: { url, publicId } })
+router.post("/", protect, sellerOnly, createProduct);
 
-// ✅ Seller: update product (with optional image)
-router.put("/:id", protect, sellerOnly, upload.single("image"), updateMyProduct);
+// ✅ Seller: update product (image optional as JSON)
+router.put("/:id", protect, sellerOnly, updateMyProduct);
 
 // ✅ Seller: delete
 router.delete("/:id", protect, sellerOnly, deleteMyProduct);
