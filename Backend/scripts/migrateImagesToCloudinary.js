@@ -16,7 +16,7 @@ async function migrate() {
       throw new Error("MONGO_URI missing in .env");
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect("mongodb://localhost:27017/finalproject");
     console.log("✅ Connected to MongoDB");
 
     // ✅ RAW collection (no Mongoose casting)
