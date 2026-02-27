@@ -6,9 +6,7 @@ const path = require("path");
 
 dotenv.config();
 
-console.log(
-  "✅ DEPLOY CHECK: running Backend/server.js (NO STAR OPTIONS) - 2026-02-27"
-);
+console.log("✅ DEPLOY CHECK: Backend/server.js - 2026-02-27");
 
 const app = express();
 
@@ -16,17 +14,39 @@ const app = express();
    ✅ CORS (RENDER + VERCEL SAFE)
    ============================== */
 
-// ✅ Add your fixed production domain(s) here
+/**
+ * Add your FIXED frontend production URLs here:
+ * - Vercel production domain
+ * - Any custom domain (if you add later)
+ */
 const allowedOrigins = new Set([
   "http://localhost:5173",
+  "http://127.0.0.1:5173",
   "https://multi-vendor-ecommerce-pink.vercel.app",
 ]);
 
-// ✅ Allow all Vercel preview deployments (*.vercel.app)
-const isAllowedVercelDomain = (origin) => {
+/**
+ * ✅ Allow Vercel Preview Deployments
+ * Example:
+ * https://multi-vendor-ecommerce-xxxxx-adarshclan2017s-projects.vercel.app
+ *
+ * This is more controlled than allowing ANY *.vercel.app
+ * It only allows:
+ * - your project name prefix (multi-vendor-ecommerce)
+ * - your Vercel team/user suffix (adarshclan2017s-projects)
+ */
+const isAllowedVercelPreview = (origin) => {
   try {
     const { hostname } = new URL(origin);
-    return hostname.endsWith(".vercel.app");
+
+    // ✅ change these 2 strings if your vercel preview pattern changes
+    const projectPrefix = "multi-vendor-ecommerce";
+    const ownerSuffix = "adarshclan2017s-projects.vercel.app";
+
+    return (
+      hostname === `${projectPrefix}.vercel.app` ||
+      (hostname.startsWith(`${projectPrefix}-`) && hostname.endsWith(ownerSuffix))
+    );
   } catch (e) {
     return false;
   }
@@ -34,22 +54,21 @@ const isAllowedVercelDomain = (origin) => {
 
 const corsOptions = {
   origin: (origin, cb) => {
-    // allow requests with no origin (Postman, server-to-server)
+    // Postman / server-to-server
     if (!origin) return cb(null, true);
 
-    // allow exact whitelisted origins
+    // exact allowlist
     if (allowedOrigins.has(origin)) return cb(null, true);
 
-    // allow vercel preview urls
-    if (isAllowedVercelDomain(origin)) return cb(null, true);
+    // vercel preview allow
+    if (isAllowedVercelPreview(origin)) return cb(null, true);
 
-    // block unknown origins
     return cb(new Error("Not allowed by CORS: " + origin));
   },
 
-  // ✅ Keep true ONLY if you use cookies.
-  // If you use JWT in Authorization header only, you can set this to false.
-  credentials: true,
+  // ✅ If you use JWT in headers (Authorization: Bearer token) → you can keep false.
+  // If you use cookies/sessions → set true.
+  credentials: false,
 
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -57,8 +76,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-/* ✅ Preflight handler for ALL OPTIONS requests
-   (No app.options("*") to avoid path-to-regexp crash) */
+/**
+ * ✅ Preflight handler (NO app.options("*") — avoids path-to-regexp crash)
+ */
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return cors(corsOptions)(req, res, next);
@@ -74,29 +94,24 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /* ==============================
-   ✅ STATIC FILES (keep if needed)
+   ✅ STATIC FILES
    ============================== */
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ==============================
    ✅ ROUTES
    ============================== */
-
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/cart", require("./routes/cartRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 
-// ✅ Seller routes
 app.use("/api/seller", require("./routes/sellerAnalyticsRoutes"));
 app.use("/api/seller/orders", require("./routes/sellerOrderRoutes"));
 
-// ✅ Users routes
 app.use("/api/users", require("./routes/userRoutes"));
 
-// ✅ Admin routes
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/admin/categories", require("./routes/adminCategoryRoutes"));
 app.use("/api/admin/settings", require("./routes/adminSettingsRoutes"));
@@ -106,7 +121,6 @@ app.use("/api/categories", require("./routes/categoryRoutes"));
 /* ==============================
    ✅ HEALTH CHECK
    ============================== */
-
 app.get("/", (req, res) => {
   res.send("API Running ✅");
 });
@@ -114,7 +128,6 @@ app.get("/", (req, res) => {
 /* ==============================
    ✅ GLOBAL ERROR HANDLER
    ============================== */
-
 app.use((err, req, res, next) => {
   console.error("🔥 SERVER ERROR:", err.message);
   res.status(500).json({ message: err.message || "Internal Server Error" });
@@ -123,7 +136,6 @@ app.use((err, req, res, next) => {
 /* ==============================
    ✅ DATABASE CONNECTION
    ============================== */
-
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
@@ -132,6 +144,5 @@ mongoose
 /* ==============================
    ✅ START SERVER
    ============================== */
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
