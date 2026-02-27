@@ -7,7 +7,7 @@ const {
   getMyOrders,
   getOrderById,
   cancelMyOrder,
-} = require("../controllers/ordercontroller");
+} = require("../controllers/orderController");
 
 // user
 router.post("/place", protect, placeOrder);
