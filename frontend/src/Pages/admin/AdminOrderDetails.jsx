@@ -25,6 +25,40 @@ const formatDateTime = (d) => {
   });
 };
 
+// ✅ No external placeholder & no /public dependency
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='320' height='220'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='16' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
+// ✅ Cloudinary + old path support
+const getImg = (imgValue) => {
+  if (!imgValue) return FALLBACK_IMG;
+
+  // Cloudinary object { url, publicId }
+  if (typeof imgValue === "object" && imgValue.url) return String(imgValue.url);
+
+  // string url
+  if (typeof imgValue === "string" && imgValue.startsWith("http")) return imgValue;
+
+  // old local path "/uploads/..."
+  // If you still keep some old order items, you can map to backend URL here:
+  if (typeof imgValue === "string" && imgValue.startsWith("/uploads/")) {
+    // ⚠️ If your backend is Render, set it here:
+    // return `https://YOUR-RENDER-URL${imgValue}`;
+    return imgValue; // keep as-is if it already works
+  }
+
+  return FALLBACK_IMG;
+};
+
 export default function AdminOrderDetails() {
   const { id } = useParams();
 
@@ -39,13 +73,14 @@ export default function AdminOrderDetails() {
       setOrder(res.data?.order || null);
     } catch (err) {
       console.log("❌ admin order details error:", err.response?.data || err);
-     
+      setOrder(null);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!id) return;
     load();
     // eslint-disable-next-line
   }, [id]);
@@ -53,16 +88,18 @@ export default function AdminOrderDetails() {
   const items = order?.items || [];
 
   const total = useMemo(() => {
-    return order?.total ?? items.reduce((s, it) => s + Number(it.price || 0) * Number(it.qty || 0), 0);
-  }, [order, items]);                                                       
-
-  const getImg = (imgPath) => {
-    if (!imgPath) return "/no-image.png";
-    if (String(imgPath).startsWith("http")) return imgPath;
-    return `http://localhost:5000${imgPath}`;
-  };
+    return (
+      order?.total ??
+      items.reduce(
+        (s, it) => s + Number(it.price || 0) * Number(it.qty || 0),
+        0
+      )
+    );
+  }, [order, items]);
 
   const updateStatus = async (status) => {
+    if (!order?._id) return;
+
     try {
       setSaving(true);
       const res = await updateAdminOrderStatus(order._id, status);
@@ -130,8 +167,8 @@ export default function AdminOrderDetails() {
                   <img
                     className="aod-img"
                     src={getImg(it.image)}
-                    alt={it.name}
-                    onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                    alt={it.name || "Product"}
+                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                   />
 
                   <div className="aod-info">
@@ -141,7 +178,9 @@ export default function AdminOrderDetails() {
                     </div>
                   </div>
 
-                  <div className="aod-line">{money(Number(it.price || 0) * Number(it.qty || 0))}</div>
+                  <div className="aod-line">
+                    {money(Number(it.price || 0) * Number(it.qty || 0))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -169,10 +208,12 @@ export default function AdminOrderDetails() {
               <div className="aod-strong">{order.address?.fullName || "—"}</div>
               <div className="aod-muted">{order.address?.street || ""}</div>
               <div className="aod-muted">
-                {order.address?.city || ""} {order.address?.state ? `, ${order.address.state}` : ""}{" "}
+                {order.address?.city || ""}{order.address?.state ? `, ${order.address.state}` : ""}{" "}
                 {order.address?.pincode ? `- ${order.address.pincode}` : ""}
               </div>
-              <div className="aod-muted">{order.address?.phone ? `📞 ${order.address.phone}` : ""}</div>
+              <div className="aod-muted">
+                {order.address?.phone ? `📞 ${order.address.phone}` : ""}
+              </div>
             </div>
           </div>
         </div>

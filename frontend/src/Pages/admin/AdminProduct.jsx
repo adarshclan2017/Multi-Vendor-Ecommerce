@@ -12,11 +12,40 @@ const stockClass = (stock) => {
   return "ap-badge in";
 };
 
-const imgUrl = (p) => {
-  const img = p?.image || p?.images?.[0] || "";
-  if (!img) return "/no-image.png";
-  if (String(img).startsWith("http")) return img;
-  return `http://localhost:5000${img}`;
+// ✅ No external placeholder, no /public dependency
+const FALLBACK_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'>
+      <rect width='100%' height='100%' fill='#f2f2f2'/>
+      <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+        font-family='Arial' font-size='16' fill='#666'>
+        No Image
+      </text>
+    </svg>
+  `);
+
+// ✅ Cloudinary-safe image resolver
+const resolveImg = (p) => {
+  const img = p?.image ?? p?.images?.[0] ?? null;
+
+  if (!img) return FALLBACK_IMG;
+
+  // Cloudinary object { url, publicId }
+  if (typeof img === "object" && img.url) return String(img.url);
+
+  // direct URL string
+  if (typeof img === "string" && img.startsWith("http")) return img;
+
+  // old local upload path "/uploads/..."
+  // If you still have some old data, you can keep this fallback:
+  if (typeof img === "string" && img.startsWith("/uploads/")) {
+    // ⚠️ Put your backend base URL here if needed (Render URL)
+    // return `https://YOUR-RENDER-URL${img}`;
+    return img; // or just return as-is if backend serves it
+  }
+
+  return FALLBACK_IMG;
 };
 
 export default function AdminProduct() {
@@ -30,7 +59,6 @@ export default function AdminProduct() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ✅ custom confirm modal state
   const [confirmDel, setConfirmDel] = useState(null); // { _id, name }
   const [deleting, setDeleting] = useState(false);
 
@@ -84,14 +112,12 @@ export default function AdminProduct() {
       });
   }, [products, q, cat]);
 
-  // ✅ open confirm modal
   const askDelete = (p) => {
     setError("");
     setSuccess("");
     setConfirmDel({ _id: p._id, name: p.name });
   };
 
-  // ✅ do delete
   const confirmDelete = async () => {
     if (!confirmDel?._id) return;
 
@@ -134,7 +160,6 @@ export default function AdminProduct() {
         </div>
       </div>
 
-      {/* ✅ Messages */}
       {error && <div className="ap-error">{error}</div>}
       {success && <div className="ap-success">{success}</div>}
 
@@ -198,9 +223,9 @@ export default function AdminProduct() {
                       <td>
                         <div className="ap-prod">
                           <img
-                            src={imgUrl(p)}
+                            src={resolveImg(p)}
                             alt={p.name}
-                            onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                            onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                           />
                           <div>
                             <div className="ap-name">{p.name}</div>
@@ -247,9 +272,9 @@ export default function AdminProduct() {
                   <div className="ap-cardTop">
                     <div className="ap-prod">
                       <img
-                        src={imgUrl(p)}
+                        src={resolveImg(p)}
                         alt={p.name}
-                        onError={(e) => (e.currentTarget.src = "/no-image.png")}
+                        onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                       />
                       <div>
                         <div className="ap-name">{p.name}</div>
@@ -287,12 +312,8 @@ export default function AdminProduct() {
         </>
       )}
 
-      {/* ✅ Delete confirm modal */}
       {confirmDel && (
-        <div
-          className="ap-modalOverlay"
-          onClick={() => !deleting && setConfirmDel(null)}
-        >
+        <div className="ap-modalOverlay" onClick={() => !deleting && setConfirmDel(null)}>
           <div className="ap-confirm" onClick={(e) => e.stopPropagation()}>
             <h3 className="ap-confirm-title">Delete Product?</h3>
             <p className="ap-confirm-text">
@@ -300,19 +321,11 @@ export default function AdminProduct() {
             </p>
 
             <div className="ap-confirmBtns">
-              <button
-                className="ap-actionBtn"
-                onClick={() => setConfirmDel(null)}
-                disabled={deleting}
-              >
+              <button className="ap-actionBtn" onClick={() => setConfirmDel(null)} disabled={deleting}>
                 Cancel
               </button>
 
-              <button
-                className="ap-actionBtn danger"
-                onClick={confirmDelete}
-                disabled={deleting}
-              >
+              <button className="ap-actionBtn danger" onClick={confirmDelete} disabled={deleting}>
                 {deleting ? "Deleting..." : "Yes, Delete"}
               </button>
             </div>
