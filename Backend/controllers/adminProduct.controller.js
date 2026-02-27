@@ -21,7 +21,7 @@ exports.getAdminProductById = async (req, res) => {
     const { id } = req.params;
     if (!isValidId(id)) return res.status(400).json({ message: "Invalid product id" });
 
-    const product = await Product.findById(id).populate("category");
+    const product = await Product.findById(id).populate("Category");
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     return res.json({ product });
