@@ -10,7 +10,11 @@ dotenv.config();
 const app = express();
 
 /* ==============================
-   ✅ CORS CONFIG (PRODUCTION SAFE)
+   ✅ CORS CONFIG (FINAL FIX)
+   - Allows localhost
+   - Allows your production Vercel domain
+   - Allows ANY vercel preview domain (*.vercel.app)
+   - Uses SAME rules for preflight (OPTIONS)
    ============================== */
 
 const allowedOrigins = [
@@ -18,29 +22,27 @@ const allowedOrigins = [
   "https://multi-vendor-ecommerce-pink.vercel.app",
 ];
 
-// Allow any Vercel preview URL automatically
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true); // allow Postman/server-to-server
+// ✅ One CORS options object used for both app.use + app.options
+const corsOptions = {
+  origin: function (origin, callback) {
+    // allow Postman / server-to-server (no origin)
+    if (!origin) return callback(null, true);
 
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.includes("vercel.app")
-      ) {
-        return callback(null, true);
-      }
+    // allow exact allowed origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
 
-      return callback(new Error("CORS blocked: " + origin));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    // allow any vercel preview url
+    if (origin.endsWith(".vercel.app")) return callback(null, true);
 
-// Handle preflight
-app.options("*", cors());
+    return callback(new Error("CORS blocked: " + origin));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 /* ==============================
    ✅ BODY PARSERS
@@ -64,14 +66,14 @@ app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/cart", require("./routes/cartRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 
-// Seller routes
+// ✅ Seller routes
 app.use("/api/seller", require("./routes/sellerAnalyticsRoutes"));
 app.use("/api/seller/orders", require("./routes/sellerOrderRoutes"));
 
-// User routes
+// ✅ Users routes
 app.use("/api/users", require("./routes/userRoutes"));
 
-// Admin routes
+// ✅ Admin routes
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/admin/categories", require("./routes/adminCategoryRoutes"));
 app.use("/api/admin/settings", adminSettingsRoutes);
