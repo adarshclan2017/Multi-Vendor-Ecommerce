@@ -2,24 +2,41 @@ const path = require("path");
 const fs = require("fs");
 const mongoose = require("mongoose");
 
-require("dotenv").config({
-  path: path.join(__dirname, "..", ".env"),
-});
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 
 const cloudinary = require("../config/cloudinary");
 
 const uploadsFolder = path.join(__dirname, "..", "uploads");
 
+function toLocalFilePath(img) {
+  if (!img || typeof img !== "string") return null;
+
+  // accepts "/uploads/a.jpg" OR "uploads/a.jpg"
+  const cleaned = img.replace(/^\/?uploads\//, "").trim();
+  if (!cleaned) return null;
+
+  return path.join(uploadsFolder, cleaned);
+}
+
 async function migrate() {
   try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI missing in .env");
+    const uri = process.env.MONGO_URI;
+    if (!uri) throw new Error("MONGO_URI missing in backend/.env");
+
+    // Cloudinary env checks (optional but helpful)
+    if (
+      !process.env.CLOUDINARY_CLOUD_NAME ||
+      !process.env.CLOUDINARY_API_KEY ||
+      !process.env.CLOUDINARY_API_SECRET
+    ) {
+      throw new Error("Cloudinary env missing (CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET)");
     }
 
-    await mongoose.connect("mongodb://localhost:27017/finalproject");
+    await mongoose.connect(uri);
     console.log("✅ Connected to MongoDB");
+    console.log("DB:", mongoose.connection.name);
 
-    // ✅ RAW collection (no Mongoose casting)
+    // RAW collection (no schema casting issues)
     const col = mongoose.connection.db.collection("products");
 
     const total = await col.countDocuments({});
@@ -33,21 +50,19 @@ async function migrate() {
       const doc = await cursor.next();
       const img = doc.image;
 
-      // ✅ already migrated
+      // ✅ already migrated (image is {url, publicId})
       if (img && typeof img === "object" && img.url) {
         skipped++;
         continue;
       }
 
-      // ✅ old format we want: "/uploads/xxx.jpg"
-      if (!img || typeof img !== "string") {
-        console.log("⚠️ No valid image:", doc._id);
+      // ✅ must be old string "/uploads/.."
+      const filePath = toLocalFilePath(img);
+      if (!filePath) {
+        console.log("⚠️ No valid old image string:", doc._id);
         skipped++;
         continue;
       }
-
-      const filename = img.replace("/uploads/", "").replace("uploads/", "").trim();
-      const filePath = path.join(uploadsFolder, filename);
 
       if (!fs.existsSync(filePath)) {
         console.log("❌ File not found:", filePath, "for", doc._id);
