@@ -1,9 +1,41 @@
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logout from "../Pages/auth/LogOut";
 import "./Navbar.css";
 
 function Navbar() {
   const token = localStorage.getItem("token");
+
+  const [cartCount, setCartCount] = useState(
+    Number(localStorage.getItem("cartCount") || 0)
+  );
+
+  useEffect(() => {
+    // when user logs out, reset count
+    if (!token) {
+      setCartCount(0);
+      localStorage.setItem("cartCount", "0");
+      return;
+    }
+
+    // load from localStorage
+    const sync = () => {
+      setCartCount(Number(localStorage.getItem("cartCount") || 0));
+    };
+
+    sync();
+
+    // ✅ same tab instant update
+    window.addEventListener("cartCountUpdated", sync);
+
+    // ✅ other tabs update
+    window.addEventListener("storage", sync);
+
+    return () => {
+      window.removeEventListener("cartCountUpdated", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [token]);
 
   return (
     <nav className="nav">
@@ -22,8 +54,11 @@ function Navbar() {
         {token && (
           <>
             <li>
-              <Link to="/cart">
+              <Link to="/cart" className="nav-cart-link">
                 <i className="fa-solid fa-cart-shopping"></i> Cart
+                {cartCount > 0 && (
+                  <span className="cart-count-badge">{cartCount}</span>
+                )}
               </Link>
             </li>
 

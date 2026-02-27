@@ -11,7 +11,8 @@ function SellerNavbar() {
         <div className="logo">Seller Panel</div>
         <div className="nav-right">
           <span>Seller</span>
-          <Logout /> {/* ✅ WORKING LOGOUT */}
+          <Logout className="logout-btn" />
+
         </div>
       </div>
 

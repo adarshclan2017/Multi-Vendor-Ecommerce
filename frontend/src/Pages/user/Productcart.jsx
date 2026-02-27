@@ -22,15 +22,29 @@ function Productcart() {
     if (ms) setTimeout(() => setMsg({ type: "", text: "" }), ms);
   };
 
+  // ✅ update cart count in navbar (simple)
+  const setNavCartCount = (items = []) => {
+    const count = items.reduce((sum, it) => sum + Number(it.qty || 0), 0);
+    localStorage.setItem("cartCount", String(count));
+
+    // ✅ same tab update for Navbar
+    window.dispatchEvent(new Event("cartCountUpdated"));
+  };
+
   const loadCart = async () => {
     try {
       setLoading(true);
       const res = await getMyCart();
       setCart(res.data);
+
+      // ✅ update navbar count
+      setNavCartCount(res.data?.items || []);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.setItem("cartCount", "0");
+        window.dispatchEvent(new Event("cartCountUpdated"));
         navigate("/login", { replace: true });
       } else {
         showMsg("error", err.response?.data?.message || "Failed to load cart");
@@ -65,6 +79,9 @@ function Productcart() {
     try {
       const res = await updateCartItem(productId, qty);
       setCart(res.data);
+
+      // ✅ update navbar count
+      setNavCartCount(res.data?.items || []);
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Update failed");
     }
@@ -76,6 +93,10 @@ function Productcart() {
     try {
       const res = await removeCartItem(productId);
       setCart(res.data);
+
+      // ✅ update navbar count
+      setNavCartCount(res.data?.items || []);
+
       showMsg("success", "Item removed ✅", 2500);
     } catch (err) {
       showMsg("error", err.response?.data?.message || "Remove failed");
@@ -88,8 +109,11 @@ function Productcart() {
     try {
       await clearCart();
 
-      // ✅ update UI instantly without confirm
+      // ✅ update UI instantly
       setCart((prev) => (prev ? { ...prev, items: [] } : prev));
+
+      // ✅ update navbar count
+      setNavCartCount([]);
 
       showMsg("success", "Cart cleared ✅", 2500);
     } catch (err) {
@@ -116,7 +140,11 @@ function Productcart() {
 
       {/* ✅ message at top (not inside each item) */}
       {msg.text && (
-        <p className={`cart-msg ${msg.type === "error" ? "cart-msg--error" : "cart-msg--success"}`}>
+        <p
+          className={`cart-msg ${
+            msg.type === "error" ? "cart-msg--error" : "cart-msg--success"
+          }`}
+        >
           {msg.text}
         </p>
       )}
@@ -143,17 +171,26 @@ function Productcart() {
                     <p className="price">₹ {p?.price}</p>
 
                     <div className="qty-row">
-                      <button onClick={() => changeQty(p._id, it.qty - 1)}>-</button>
+                      <button onClick={() => changeQty(p._id, it.qty - 1)}>
+                        -
+                      </button>
                       <span>{it.qty}</span>
-                      <button onClick={() => changeQty(p._id, it.qty + 1)}>+</button>
+                      <button onClick={() => changeQty(p._id, it.qty + 1)}>
+                        +
+                      </button>
                     </div>
 
-                    <button className="remove-btn" onClick={() => removeItem(p._id)}>
+                    <button
+                      className="remove-btn"
+                      onClick={() => removeItem(p._id)}
+                    >
                       Remove
                     </button>
                   </div>
 
-                  <div className="line-total">₹ {Number(p?.price || 0) * it.qty}</div>
+                  <div className="line-total">
+                    ₹ {Number(p?.price || 0) * it.qty}
+                  </div>
                 </div>
               );
             })}
@@ -161,7 +198,10 @@ function Productcart() {
 
           <div className="cart-summary">
             <h3>Total: ₹ {total}</h3>
-            <button className="checkout-btn" onClick={() => navigate("/checkout")}>
+            <button
+              className="checkout-btn"
+              onClick={() => navigate("/checkout")}
+            >
               Proceed to Checkout
             </button>
           </div>

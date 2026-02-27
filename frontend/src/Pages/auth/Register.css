@@ -3,14 +3,18 @@ html,
 body {
   height: 100%;
   margin: 0;
-  overflow: hidden;   /* ✅ stops scrolling */
+  overflow: hidden;
+  overflow-y: auto;
+  /* ✅ stops scrolling */
 }
 
 /* Full page background */
 .register {
-  height: 100vh;      /* ✅ fixed viewport height */
+  height: 100vh;
+  /* ✅ fixed viewport height */
   width: 100%;
-  position: fixed;    /* ✅ prevents flow */
+  position: fixed;
+  /* ✅ prevents flow */
   top: 0;
   left: 0;
 
@@ -19,8 +23,7 @@ body {
   justify-content: center;
 
   /* SAME background image */
-  background: url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1950&q=80")
-    no-repeat center center / cover;
+  background: url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1950&q=80") no-repeat center center / cover;
 }
 
 /* Overlay to darken the background */
@@ -32,12 +35,14 @@ body {
   background: rgba(0, 0, 0, 0.4);
   z-index: 0;
 }
+
 .register-wrap {
   width: 100%;
   display: flex;
   justify-content: center;
   padding: 0 16px;
 }
+
 .register .card {
   position: relative;
   z-index: 1;
@@ -49,15 +54,19 @@ body {
   border-radius: 15px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 
-  width: 90%;              /* ✅ IMPORTANT */
-  max-width: 500px;        /* ✅ noticeably wider */
-  padding: 2.5rem;         /* more space */
+  width: 90%;
+  /* ✅ IMPORTANT */
+  max-width: 500px;
+  /* ✅ noticeably wider */
+  padding: 2.5rem;
+  /* more space */
   color: #fff;
 }
 
 .register .row {
   width: 100%;
-  margin: 0;           /* 🚨 remove bootstrap row margin */
+  margin: 0;
+  /* 🚨 remove bootstrap row margin */
   justify-content: center;
 }
 
@@ -98,7 +107,8 @@ body {
   padding: 10px;
   border-radius: 8px;
 
-  appearance: none;          /* remove default arrow */
+  appearance: none;
+  /* remove default arrow */
   -webkit-appearance: none;
   -moz-appearance: none;
 
@@ -114,7 +124,8 @@ body {
 
 /* Dropdown options */
 .form-select option {
-  background: rgba(0, 0, 0, 0.85);  /* ⚠️ required */
+  background: rgba(0, 0, 0, 0.85);
+  /* ⚠️ required */
   color: #fff;
 }
 
