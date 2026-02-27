@@ -10,7 +10,7 @@ dotenv.config();
 const app = express();
 
 /* ==============================
-   ✅ CORS (PRODUCTION SAFE)
+   ✅ CORS (NO DEPLOY CRASH)
    ============================== */
 
 const allowedOrigins = [
@@ -19,23 +19,25 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests without origin (Postman, mobile apps)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("Not allowed by CORS: " + origin));
-    }
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true); // Postman / server-to-server
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS: " + origin));
   },
-  credentials: true, // keep true ONLY if using cookies
+  credentials: true, // keep true only if you use cookies
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // ✅ Fix for preflight
+
+// ✅ Preflight handler (SAFE: no "*")
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return cors(corsOptions)(req, res, next);
+  }
+  next();
+});
 
 /* ==============================
    ✅ BODY PARSERS
