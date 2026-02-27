@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
-const Order = require("../models/order");
+const Order = require("../models/Order");
 const User = require("../models/User");
-const Product = require("../models/product"); // ✅ keep this consistent with your project
+const Product = require("../models/Product"); // ✅ keep this consistent with your project
 
 /* =========================
    DASHBOARD STATS

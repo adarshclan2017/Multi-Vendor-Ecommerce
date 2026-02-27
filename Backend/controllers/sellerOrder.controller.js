@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Order = require("../models/order");
-const Product = require("../models/product");
+const Order = require("../models/Order");
+const Product = require("../models/Product");
 
 // ✅ GET seller orders (only items that belong to this seller)
 exports.getSellerOrders = async (req, res) => {
