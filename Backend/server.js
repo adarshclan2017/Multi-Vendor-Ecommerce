@@ -10,39 +10,23 @@ dotenv.config();
 const app = express();
 
 /* ==============================
-   ✅ CORS CONFIG (FINAL FIX)
-   - Allows localhost
-   - Allows your production Vercel domain
-   - Allows ANY vercel preview domain (*.vercel.app)
-   - Uses SAME rules for preflight (OPTIONS)
+   ✅ CORS (UPDATED SIMPLE FIX)
    ============================== */
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://multi-vendor-ecommerce-pink.vercel.app",
-];
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://multi-vendor-ecommerce-pink.vercel.app",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-// ✅ One CORS options object used for both app.use + app.options
-const corsOptions = {
-  origin: function (origin, callback) {
-    // allow Postman / server-to-server (no origin)
-    if (!origin) return callback(null, true);
-
-    // allow exact allowed origins
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-
-    // allow any vercel preview url
-    if (origin.endsWith(".vercel.app")) return callback(null, true);
-
-    return callback(new Error("CORS blocked: " + origin));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// ✅ Preflight
+app.options("*", cors());
 
 /* ==============================
    ✅ BODY PARSERS
