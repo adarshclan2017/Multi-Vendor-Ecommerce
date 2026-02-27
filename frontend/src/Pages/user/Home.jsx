@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Productcard from "../user/Productcard";
 import "../../styles/Productcard.css";
-import Footer from "../../Components/Footer";
+import Footer from "../../components/Footer";
 import Slideshow from "../../components/SlideShow";
 import { getAllProducts } from "../../api/productapi";
 
