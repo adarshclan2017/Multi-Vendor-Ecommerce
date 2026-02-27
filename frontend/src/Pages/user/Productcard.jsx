@@ -10,10 +10,21 @@ export default function Productcard({ Product }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // ✅ Local fallback (no external DNS dependency)
+  const FALLBACK =
+    "data:image/svg+xml;charset=UTF-8," +
+    encodeURIComponent(`
+      <svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'>
+        <rect width='100%' height='100%' fill='#f2f2f2'/>
+        <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+          font-family='Arial' font-size='28' fill='#666'>
+          No Image
+        </text>
+      </svg>
+    `);
+
   // ✅ Cloudinary image support
-  const imageUrl =
-    Product?.image?.url ||
-    "https://via.placeholder.com/600x600?text=No+Image";
+  const imageUrl = Product?.image?.url || FALLBACK;
 
   // ✅ category name safe
   const categoryName = useMemo(() => {
@@ -44,12 +55,10 @@ export default function Productcard({ Product }) {
     try {
       await addToCart(Product._id, 1);
       setSuccess("Added to cart successfully ✅");
-
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       console.error("❌ Add to cart error:", err);
       setError(err.response?.data?.message || "Add to cart failed");
-
       setTimeout(() => setError(""), 4000);
     }
   };
@@ -63,10 +72,7 @@ export default function Productcard({ Product }) {
             src={imageUrl}
             alt={Product?.name || "Product"}
             loading="lazy"
-            onError={(e) =>
-              (e.currentTarget.src =
-                "https://via.placeholder.com/600x600?text=No+Image")
-            }
+            onError={(e) => (e.currentTarget.src = FALLBACK)}
           />
 
           <span
@@ -97,9 +103,7 @@ export default function Productcard({ Product }) {
 
           <div className="pc-ratingRow">
             <Stars value={Product?.rating || 0} size={14} />
-            <span className="pc-rev">
-              ({Product?.numReviews || 0})
-            </span>
+            <span className="pc-rev">({Product?.numReviews || 0})</span>
           </div>
 
           {error && <p className="pc-msg pc-msg--error">{error}</p>}
@@ -114,10 +118,7 @@ export default function Productcard({ Product }) {
               {outOfStock ? "Unavailable" : "Add to cart"}
             </button>
 
-            <Link
-              className="pc-btn pc-btn--ghost"
-              to={`/product/${Product?._id}`}
-            >
+            <Link className="pc-btn pc-btn--ghost" to={`/product/${Product?._id}`}>
               View
             </Link>
           </div>
