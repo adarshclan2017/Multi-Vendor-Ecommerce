@@ -57,17 +57,26 @@ function SellerOrderDetails() {
      - it.image = "https://..."
      - it.image = { url, publicId }
   */
-  const getImg = (imgValue) => {
+  const getImg = (it) => {
+    const imgValue =
+      it?.image ??
+      it?.productImage ??
+      it?.product?.image ??
+      it?.productId?.image ??
+      it?.product?.images?.[0] ??
+      it?.images?.[0];
+
     if (!imgValue) return FALLBACK_IMG;
 
-    if (typeof imgValue === "object" && imgValue.url) {
-      return String(imgValue.url);
+    // {url, publicId}
+    if (typeof imgValue === "object") {
+      if (imgValue.url) return String(imgValue.url);
+      if (imgValue.secure_url) return String(imgValue.secure_url);
     }
 
     const s = String(imgValue);
     if (s.startsWith("http")) return s;
 
-    // old /uploads path => fallback
     return FALLBACK_IMG;
   };
 
@@ -144,7 +153,7 @@ function SellerOrderDetails() {
               <div className="sod-item" key={idx}>
                 <img
                   className="sod-img"
-                  src={getImg(it.image)}
+                  src={getImg(it)}
                   alt={it.name || "Item"}
                   onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                 />

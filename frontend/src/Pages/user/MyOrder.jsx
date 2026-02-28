@@ -83,21 +83,44 @@ function MyOrders() {
     return "st st-pending";
   };
 
-  /* ✅ Cloudinary-safe image resolver */
-  const resolveImage = (imgRaw) => {
-    if (!imgRaw) return FALLBACK_IMG;
+  /* ✅ Strong image resolver (handles ALL cases) */
+  const resolveImage = (it) => {
+    const candidates = [
+      it?.image, // string OR object OR "[object Object]"
+      it?.productImage,
+      it?.images?.[0],
+      it?.product?.image,
+      it?.product?.images?.[0],
+      it?.productId?.image,
+      it?.productId?.images?.[0],
+    ];
 
-    // Case 1: { url, publicId }
-    if (typeof imgRaw === "object" && imgRaw.url) {
-      return String(imgRaw.url);
+    const pickUrl = (v) => {
+      if (!v) return "";
+
+      // object: {url, publicId} or cloudinary {secure_url}
+      if (typeof v === "object") {
+        if (v.url) return String(v.url);
+        if (v.secure_url) return String(v.secure_url);
+        return "";
+      }
+
+      const s = String(v).trim();
+
+      // bad stored value from old schema
+      if (!s || s === "[object Object]") return "";
+
+      // direct url
+      if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+      return "";
+    };
+
+    for (const c of candidates) {
+      const url = pickUrl(c);
+      if (url) return url;
     }
 
-    // Case 2: direct Cloudinary URL
-    if (typeof imgRaw === "string" && imgRaw.startsWith("http")) {
-      return imgRaw;
-    }
-
-    // Old /uploads images -> ignore
     return FALLBACK_IMG;
   };
 
@@ -154,17 +177,17 @@ function MyOrders() {
                     const name = it?.name || it?.product?.name || "Product";
                     const qty = it?.qty ?? it?.quantity ?? 1;
 
-                    const imgRaw = it?.image || it?.product?.image;
-                    const img = resolveImage(imgRaw);
+                    const img = resolveImage(it);
 
                     return (
                       <div className="order-item" key={it?.product?._id || i}>
                         <img
                           src={img}
-                          alt="Product"
-                          onError={(e) =>
-                            (e.currentTarget.src = FALLBACK_IMG)
-                          }
+                          alt={name}
+                          onError={(e) => {
+                            e.currentTarget.onerror = null; // prevent loop
+                            e.currentTarget.src = FALLBACK_IMG;
+                          }}
                         />
                         <div className="order-item-info">
                           <div className="order-item-name">{name}</div>
@@ -175,9 +198,7 @@ function MyOrders() {
                   })}
 
                   {items.length > 3 && (
-                    <div className="more-items">
-                      +{items.length - 3} more
-                    </div>
+                    <div className="more-items">+{items.length - 3} more</div>
                   )}
                 </div>
 

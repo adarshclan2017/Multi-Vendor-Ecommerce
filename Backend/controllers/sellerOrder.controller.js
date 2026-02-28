@@ -15,6 +15,14 @@ exports.getSellerOrders = async (req, res) => {
       })
       .lean();
 
+    const pickImage = (it) => {
+      if (typeof it.image === "string") {
+        const s = it.image.trim();
+        if (s.startsWith("http://") || s.startsWith("https://")) return s;
+      }
+      return it.product?.image || "";
+    };
+
     const filtered = orders
       .map((o) => {
         const sellerItems = (o.items || []).filter((it) => {
@@ -27,17 +35,16 @@ exports.getSellerOrders = async (req, res) => {
 
         const sellerTotal = sellerItems.reduce(
           (sum, it) =>
-            sum +
-            Number(it.price || it.product?.price || 0) * Number(it.qty || 0),
+            sum + Number(it.price || it.product?.price || 0) * Number(it.qty || 0),
           0
         );
 
         const itemsMapped = sellerItems.map((it) => ({
           ...it,
           name: it.name || it.product?.name,
-          image: it.image || it.product?.image,
+          image: pickImage(it), // ✅ prefer valid url or product image
           price: it.price || it.product?.price,
-          product: it.product?._id, // keep only product id for frontend
+          product: it.product?._id,
         }));
 
         return { ...o, items: itemsMapped, sellerTotal };
@@ -86,10 +93,18 @@ exports.getSellerOrderById = async (req, res) => {
       0
     );
 
+    const pickImage = (it) => {
+      if (typeof it.image === "string") {
+        const s = it.image.trim();
+        if (s.startsWith("http://") || s.startsWith("https://")) return s;
+      }
+      return it.product?.image || "";
+    };
+
     const itemsMapped = sellerItems.map((it) => ({
       ...it,
       name: it.name || it.product?.name,
-      image: it.image || it.product?.image,
+      image: pickImage(it), // ✅ prefer valid url or product image
       price: it.price || it.product?.price,
       product: it.product?._id,
     }));
