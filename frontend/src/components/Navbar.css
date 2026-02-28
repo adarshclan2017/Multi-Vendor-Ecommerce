@@ -100,24 +100,22 @@
 .nav-links.desktop {
   display: flex;
 }
-.nav-burger {
-  display: none;
-}
 
-/* Burger button */
+/* ✅ Burger button (ONLY ONE block) */
 .nav-burger {
+  display: none;              /* hidden on desktop */
   width: 44px;
   height: 44px;
   border: none;
   background: transparent;
   cursor: pointer;
-  display: grid;
   place-items: center;
   border-radius: 12px;
 }
 .nav-burger:hover {
   background: rgba(255, 255, 255, 0.06);
 }
+
 .bar {
   display: block;
   width: 22px;
@@ -197,7 +195,7 @@
   gap: 8px;
 }
 
-/* Responsive */
+/* ✅ Responsive */
 @media (max-width: 768px) {
   .nav {
     padding: 0 12px;
@@ -208,6 +206,13 @@
   }
 
   .nav-burger {
-    display: grid;
+    display: grid; /* show burger on mobile only */
+  }
+}
+
+/* ✅ Optional clean: hide drawer on desktop completely */
+@media (min-width: 769px) {
+  .nav-drawer {
+    display: none;
   }
 }
