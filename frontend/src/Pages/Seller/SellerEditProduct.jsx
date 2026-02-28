@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/SellerEditProduct.css";
 import { getProductById, updateProduct } from "../../api/productapi";
 import { getPublicCategories } from "../../api/categoryApi";
+import { api } from "@/api/api";
 
 // ✅ Local fallback (NO external DNS)
 const FALLBACK_IMG =
