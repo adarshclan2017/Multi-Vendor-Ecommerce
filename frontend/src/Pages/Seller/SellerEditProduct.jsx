@@ -37,7 +37,6 @@ function SellerEditProduct() {
     image: null, // new uploaded file
   });
 
-  // ✅ store current image URL (Cloudinary)
   const [currentImageUrl, setCurrentImageUrl] = useState("");
 
   const [error, setError] = useState("");
@@ -79,7 +78,6 @@ function SellerEditProduct() {
           image: null,
         });
 
-        // ✅ handle new image format {url, publicId} or old string URL
         const imgUrl =
           p?.image?.url ||
           (typeof p?.image === "string" && p.image.startsWith("http")
@@ -128,49 +126,65 @@ function SellerEditProduct() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!product.category) {
-    setError("Please select a category");
-    return;
-  }
-
-  try {
-    setSaving(true);
-    setError("");
-    setSuccess("");
-
-    // ✅ build JSON payload (your backend expects JSON)
-    const payload = {
-      name: product.name,
-      price: product.price,
-      stock: product.stock,
-      category: product.category,
-      description: product.description,
-    };
-
-    // ✅ If new image chosen, upload first then attach {url, publicId}
-    if (product.image) {
-      const fd = new FormData();
-      fd.append("image", product.image);
-
-      // IMPORTANT: this endpoint is your upload route
-      const up = await api.post("/upload", fd); // <-- use your axios instance
-      payload.image = up.data; // { url, publicId }
+    if (!product.category) {
+      setError("Please select a category");
+      return;
     }
 
-    // ✅ Update product with JSON
-    await updateProduct(id, payload);
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
 
-    setSuccess("Product updated successfully ✅");
-    navigate("/seller/product");
-  } catch (err) {
-    console.log("❌ update failed:", err.response?.data || err);
-    setError(err.response?.data?.message || "Update failed");
-  } finally {
-    setSaving(false);
-  }
-};
+      const payload = {
+        name: product.name,
+        price: product.price,
+        stock: product.stock,
+        category: product.category,
+        description: product.description,
+      };
+
+      // ✅ If new image chosen, upload first then attach {url, publicId}
+      if (product.image) {
+        const fd = new FormData();
+        fd.append("image", product.image);
+
+        const up = await api.post("/upload", fd);
+        payload.image = up.data; // { url, publicId }
+
+        // ✅ update UI immediately
+        setCurrentImageUrl(up.data?.url || "");
+      }
+
+      // ✅ Update product with JSON
+      const updatedRes = await updateProduct(id, payload);
+
+      // ✅ if backend returns updated product, sync current image again
+      const updated = updatedRes?.data?.product || updatedRes?.data;
+      const newUrl =
+        updated?.image?.url ||
+        (typeof updated?.image === "string" && updated.image.startsWith("http")
+          ? updated.image
+          : "");
+      if (newUrl) setCurrentImageUrl(newUrl);
+
+      // ✅ clear file selection after success
+      setProduct((prev) => ({ ...prev, image: null }));
+
+      setSuccess("Product updated successfully ✅");
+
+      // If you want to stay on same page to see image updated, comment next line
+      navigate("/seller/product");
+    } catch (err) {
+      console.log("❌ update failed:", err.response?.data || err);
+      setError(err.response?.data?.message || "Update failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return <p style={{ padding: 20 }}>Loading...</p>;
 
   return (
