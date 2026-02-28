@@ -4,29 +4,32 @@ import "../../styles/Productcard.css";
 import { addToCart } from "../../api/cartapi";
 import Stars from "../../components/Stars";
 
+const FALLBACK_IMG = "/no-image.png";
+
 export default function Productcard({ Product }) {
   const navigate = useNavigate();
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ✅ Local fallback (no external DNS dependency)
-  const FALLBACK =
-    "data:image/svg+xml;charset=UTF-8," +
-    encodeURIComponent(`
-      <svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'>
-        <rect width='100%' height='100%' fill='#f2f2f2'/>
-        <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
-          font-family='Arial' font-size='28' fill='#666'>
-          No Image
-        </text>
-      </svg>
-    `);
+  // ✅ supports: string (old /uploads/..) OR object (cloudinary)
+  const imageUrl = useMemo(() => {
+    const img = Product?.image;
 
-  // ✅ Cloudinary image support
-  const imageUrl = Product?.image?.url || FALLBACK;
+    if (!img) return FALLBACK_IMG;
 
-  // ✅ category name safe
+    // cloudinary: { url, publicId }
+    if (typeof img === "object" && img.url) return img.url;
+
+    // old: "/uploads/xxx.jpg"
+    if (typeof img === "string") {
+      if (img.startsWith("http")) return img;
+      // ✅ IMPORTANT: use your backend base url here if needed
+      return `${import.meta.env.VITE_API_URL}${img}`;
+    }
+
+    return FALLBACK_IMG;
+  }, [Product?.image]);
+
   const categoryName = useMemo(() => {
     const c = Product?.category;
     if (!c) return "";
@@ -41,7 +44,6 @@ export default function Productcard({ Product }) {
     setSuccess("");
 
     const token = localStorage.getItem("token");
-
     if (!token) {
       setError("Please login to add items to cart");
       return navigate("/login");
@@ -57,7 +59,6 @@ export default function Productcard({ Product }) {
       setSuccess("Added to cart successfully ✅");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      console.error("❌ Add to cart error:", err);
       setError(err.response?.data?.message || "Add to cart failed");
       setTimeout(() => setError(""), 4000);
     }
@@ -72,7 +73,7 @@ export default function Productcard({ Product }) {
             src={imageUrl}
             alt={Product?.name || "Product"}
             loading="lazy"
-            onError={(e) => (e.currentTarget.src = FALLBACK)}
+            onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
           />
 
           <span
