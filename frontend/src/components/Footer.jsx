@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="ft-col">
             <div className="ft-brand">
               <i className="fa-solid fa-store ft-brandIcon" />
-              <span>ShopEase</span>
+              <span>Myshop</span>
             </div>
 
             <p className="ft-text">
@@ -37,11 +37,7 @@ export default function Footer() {
                   <i className="fa-solid fa-house" /> Home
                 </Link>
               </li>
-              <li>
-                <Link to="/products">
-                  <i className="fa-solid fa-bag-shopping" /> Products
-                </Link>
-              </li>
+            
               <li>
                 <Link to="/cart">
                   <i className="fa-solid fa-cart-shopping" /> Cart
@@ -67,17 +63,17 @@ export default function Footer() {
             <div className="ft-contact">
               <a className="ft-contactRow" href="mailto:support@shopease.com">
                 <i className="fa-solid fa-envelope" />
-                <span>support@shopease.com</span>
+                <span>Nova@gmail.com</span>
               </a>
 
               <a className="ft-contactRow" href="tel:+919876543210">
                 <i className="fa-solid fa-phone" />
-                <span>+91 98765 43210</span>
+                <span>+9000000000</span>
               </a>
 
               <div className="ft-contactRow muted">
                 <i className="fa-solid fa-location-dot" />
-                <span>India • Kochi</span>
+                <span>Tamil Nadu • Kuzhithurai</span>
               </div>
             </div>
 
