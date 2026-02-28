@@ -163,9 +163,7 @@ exports.createProduct = async (req, res) => {
     const { name, description, price, stock, category } = req.body;
 
     if (!name || price === undefined || stock === undefined) {
-      return res
-        .status(400)
-        .json({ message: "name, price, stock are required" });
+      return res.status(400).json({ message: "name, price, stock are required" });
     }
 
     // category optional, but if present it must be active
@@ -178,12 +176,17 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    const imageObj = parseImage(req.body.image); // { url, publicId } | null
-    if (!imageObj?.url) {
-      return res.status(400).json({
-        message: "Product image is required. Upload to Cloudinary and send {url, publicId}.",
-      });
+    // ✅ image from multipart
+    if (!req.file) {
+      return res.status(400).json({ message: "Product image is required." });
     }
+
+    const b64 = req.file.buffer.toString("base64");
+    const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+
+    const uploadRes = await cloudinary.uploader.upload(dataUri, {
+      folder: "products",
+    });
 
     const product = await Product.create({
       name: String(name).trim(),
@@ -191,7 +194,7 @@ exports.createProduct = async (req, res) => {
       price: Number(price),
       stock: Number(stock),
       category: categoryId || undefined,
-      image: { url: imageObj.url, publicId: imageObj.publicId || "" },
+      image: { url: uploadRes.secure_url, publicId: uploadRes.public_id },
       seller: req.user._id,
     });
 
@@ -205,7 +208,6 @@ exports.createProduct = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 // ✅ Seller: my products
 exports.getMyProducts = async (req, res) => {
   try {
@@ -261,27 +263,27 @@ exports.updateMyProduct = async (req, res) => {
       }
     }
 
-    // ✅ image update (cloudinary)
-    if (req.body.image !== undefined) {
-      const newImage = parseImage(req.body.image);
+    // ✅ image update via multipart (req.file is optional)
+if (req.file) {
+  const oldPublicId = product.image?.publicId;
 
-      // allow clearing image (not recommended)
-      if (!newImage?.url) {
-        // if they explicitly send empty, keep current OR clear (choose one)
-        // Here: keep current if empty was sent
-      } else {
-        const oldPublicId = product.image?.publicId;
-        product.image = {
-          url: newImage.url,
-          publicId: newImage.publicId || "",
-        };
+  const b64 = req.file.buffer.toString("base64");
+  const dataUri = `data:${req.file.mimetype};base64,${b64}`;
 
-        // delete old image after setting new one
-        if (oldPublicId && oldPublicId !== product.image.publicId) {
-          await deleteCloudinaryByPublicId(oldPublicId);
-        }
-      }
-    }
+  const uploadRes = await cloudinary.uploader.upload(dataUri, {
+    folder: "products",
+  });
+
+  product.image = {
+    url: uploadRes.secure_url,
+    publicId: uploadRes.public_id,
+  };
+
+  // delete old image
+  if (oldPublicId && oldPublicId !== product.image.publicId) {
+    await deleteCloudinaryByPublicId(oldPublicId);
+  }
+}
 
     await product.save();
 

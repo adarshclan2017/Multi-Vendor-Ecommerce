@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
 
 const { protect, sellerOnly } = require("../middleware/authMiddleware");
 
@@ -25,11 +27,11 @@ router.get("/:id", getProductById);
 // ✅ Reviews
 router.post("/:id/reviews", protect, addProductReview);
 
-// ✅ Seller: create product (image will come as JSON: { image: { url, publicId } })
-router.post("/", protect, sellerOnly, createProduct);
+/// ✅ Seller: create product (multipart)
+router.post("/", protect, sellerOnly, upload.single("image"), createProduct);
 
-// ✅ Seller: update product (image optional as JSON)
-router.put("/:id", protect, sellerOnly, updateMyProduct);
+// ✅ Seller: update product (multipart optional)
+router.put("/:id", protect, sellerOnly, upload.single("image"), updateMyProduct);
 
 // ✅ Seller: delete
 router.delete("/:id", protect, sellerOnly, deleteMyProduct);

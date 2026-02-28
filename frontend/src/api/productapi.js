@@ -18,7 +18,6 @@ export const updateProduct = (id, formData) => {
 
   return API.put(`/products/${id}`, formData, {
     headers: {
-      "Content-Type": "multipart/form-data",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });

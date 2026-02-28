@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/SellerEditProduct.css";
 import { getProductById, updateProduct } from "../../api/productapi";
 import { getPublicCategories } from "../../api/categoryApi";
+import { api } from "../../api/api";
 
 // ✅ Local fallback (NO external DNS)
 const FALLBACK_IMG =
@@ -127,39 +128,49 @@ function SellerEditProduct() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!product.category) {
-      setError("Please select a category");
-      return;
-    }
+  if (!product.category) {
+    setError("Please select a category");
+    return;
+  }
 
-    try {
-      setSaving(true);
-      setError("");
-      setSuccess("");
+  try {
+    setSaving(true);
+    setError("");
+    setSuccess("");
 
+    // ✅ build JSON payload (your backend expects JSON)
+    const payload = {
+      name: product.name,
+      price: product.price,
+      stock: product.stock,
+      category: product.category,
+      description: product.description,
+    };
+
+    // ✅ If new image chosen, upload first then attach {url, publicId}
+    if (product.image) {
       const fd = new FormData();
-      fd.append("name", product.name);
-      fd.append("price", product.price);
-      fd.append("stock", product.stock);
-      fd.append("category", product.category);
-      fd.append("description", product.description);
+      fd.append("image", product.image);
 
-      if (product.image) fd.append("image", product.image);
-
-      await updateProduct(id, fd);
-
-      setSuccess("Product updated successfully ✅");
-      navigate("/seller/product");
-    } catch (err) {
-      console.log("❌ update failed:", err.response?.data || err);
-      setError(err.response?.data?.message || "Update failed");
-    } finally {
-      setSaving(false);
+      // IMPORTANT: this endpoint is your upload route
+      const up = await api.post("/upload", fd); // <-- use your axios instance
+      payload.image = up.data; // { url, publicId }
     }
-  };
 
+    // ✅ Update product with JSON
+    await updateProduct(id, payload);
+
+    setSuccess("Product updated successfully ✅");
+    navigate("/seller/product");
+  } catch (err) {
+    console.log("❌ update failed:", err.response?.data || err);
+    setError(err.response?.data?.message || "Update failed");
+  } finally {
+    setSaving(false);
+  }
+};
   if (loading) return <p style={{ padding: 20 }}>Loading...</p>;
 
   return (
