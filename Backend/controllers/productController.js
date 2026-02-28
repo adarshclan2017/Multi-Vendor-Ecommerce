@@ -237,9 +237,7 @@ exports.updateMyProduct = async (req, res) => {
 
     // only owner seller can update
     if (String(product.seller) !== String(req.user._id)) {
-      return res
-        .status(403)
-        .json({ message: "You can update only your products" });
+      return res.status(403).json({ message: "You can update only your products" });
     }
 
     const { name, description, price, stock, category } = req.body;
@@ -263,27 +261,44 @@ exports.updateMyProduct = async (req, res) => {
       }
     }
 
-    // ✅ image update via multipart (req.file is optional)
-if (req.file) {
-  const oldPublicId = product.image?.publicId;
+    // ✅ IMAGE UPDATE supports BOTH JSON and multipart
+    let newImageObj = null;
 
-  const b64 = req.file.buffer.toString("base64");
-  const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+    // 1) JSON mode: req.body.image = { url, publicId }
+    // If frontend sends image field (even as stringified JSON), parse it
+    if (req.body?.image !== undefined) {
+      const img = parseImage(req.body.image); // { url, publicId } | null
+      if (img?.url) newImageObj = img;
+    }
 
-  const uploadRes = await cloudinary.uploader.upload(dataUri, {
-    folder: "products",
-  });
+    // 2) Multipart mode: req.file exists -> upload to cloudinary
+    if (req.file) {
+      const b64 = req.file.buffer.toString("base64");
+      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
 
-  product.image = {
-    url: uploadRes.secure_url,
-    publicId: uploadRes.public_id,
-  };
+      const uploadRes = await cloudinary.uploader.upload(dataUri, {
+        folder: "products",
+      });
 
-  // delete old image
-  if (oldPublicId && oldPublicId !== product.image.publicId) {
-    await deleteCloudinaryByPublicId(oldPublicId);
-  }
-}
+      newImageObj = {
+        url: uploadRes.secure_url,
+        publicId: uploadRes.public_id,
+      };
+    }
+
+    // Apply new image if available + delete old image
+    if (newImageObj?.url) {
+      const oldPublicId = product.image?.publicId;
+
+      product.image = {
+        url: newImageObj.url,
+        publicId: newImageObj.publicId || "",
+      };
+
+      if (oldPublicId && oldPublicId !== product.image.publicId) {
+        await deleteCloudinaryByPublicId(oldPublicId);
+      }
+    }
 
     await product.save();
 
