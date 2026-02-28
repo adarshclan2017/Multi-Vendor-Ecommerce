@@ -38,22 +38,46 @@ const FALLBACK_IMG =
     </svg>
   `);
 
-// ✅ Cloudinary + old path support
-const getImg = (imgValue) => {
-  if (!imgValue) return FALLBACK_IMG;
+// ✅ pick a usable url from any value
+const pickUrl = (v) => {
+  if (!v) return "";
 
-  // Cloudinary object { url, publicId }
-  if (typeof imgValue === "object" && imgValue.url) return String(imgValue.url);
+  // object: {url, publicId} or cloudinary {secure_url}
+  if (typeof v === "object") {
+    if (v.url) return String(v.url);
+    if (v.secure_url) return String(v.secure_url);
+    return "";
+  }
 
-  // string url
-  if (typeof imgValue === "string" && imgValue.startsWith("http")) return imgValue;
+  const s = String(v).trim();
 
-  // old local path "/uploads/..."
-  // If you still keep some old order items, you can map to backend URL here:
-  if (typeof imgValue === "string" && imgValue.startsWith("/uploads/")) {
-    // ⚠️ If your backend is Render, set it here:
-    // return `https://YOUR-RENDER-URL${imgValue}`;
-    return imgValue; // keep as-is if it already works
+  // old bad stored value from schema mismatch
+  if (!s || s === "[object Object]") return "";
+
+  // direct url
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+
+  // old local path "/uploads/..." => return as-is (or map to backend URL if needed)
+  if (s.startsWith("/uploads/")) return s;
+
+  return "";
+};
+
+// ✅ Cloudinary + old orders support (item may have many shapes)
+const getItemImg = (it) => {
+  const candidates = [
+    it?.image, // snapshot string OR object OR bad "[object Object]"
+    it?.productImage,
+    it?.images?.[0],
+    it?.product?.image,
+    it?.product?.images?.[0],
+    it?.productId?.image,
+    it?.productId?.images?.[0],
+  ];
+
+  for (const c of candidates) {
+    const url = pickUrl(c);
+    if (url) return url;
   }
 
   return FALLBACK_IMG;
@@ -90,10 +114,7 @@ export default function AdminOrderDetails() {
   const total = useMemo(() => {
     return (
       order?.total ??
-      items.reduce(
-        (s, it) => s + Number(it.price || 0) * Number(it.qty || 0),
-        0
-      )
+      items.reduce((s, it) => s + Number(it.price || 0) * Number(it.qty || 0), 0)
     );
   }, [order, items]);
 
@@ -166,9 +187,12 @@ export default function AdminOrderDetails() {
                 <div className="aod-item" key={idx}>
                   <img
                     className="aod-img"
-                    src={getImg(it.image)}
+                    src={getItemImg(it)}
                     alt={it.name || "Product"}
-                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null; // prevent loop
+                      e.currentTarget.src = FALLBACK_IMG;
+                    }}
                   />
 
                   <div className="aod-info">
@@ -208,7 +232,8 @@ export default function AdminOrderDetails() {
               <div className="aod-strong">{order.address?.fullName || "—"}</div>
               <div className="aod-muted">{order.address?.street || ""}</div>
               <div className="aod-muted">
-                {order.address?.city || ""}{order.address?.state ? `, ${order.address.state}` : ""}{" "}
+                {order.address?.city || ""}
+                {order.address?.state ? `, ${order.address.state}` : ""}{" "}
                 {order.address?.pincode ? `- ${order.address.pincode}` : ""}
               </div>
               <div className="aod-muted">
