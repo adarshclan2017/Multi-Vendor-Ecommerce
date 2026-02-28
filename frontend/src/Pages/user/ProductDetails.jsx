@@ -52,27 +52,30 @@ export default function ProductDetails() {
   const outOfStock = Number(product?.stock) <= 0;
 
   // ✅ Build images array (supports: image.url, image string, images[] with url/string)
+  // ✅ Blocks via.placeholder.com completely
   const images = useMemo(() => {
     const list = [];
 
     const pushImg = (img) => {
       if (!img) return;
 
-      // new format: {url, publicId}
+      // object {url, publicId}
       if (typeof img === "object" && img.url) {
-        list.push(String(img.url));
+        const u = String(img.url).trim();
+        if (!u) return;
+        if (u.includes("via.placeholder.com")) return; // 🚫 block
+        if (u.startsWith("http")) list.push(u);
         return;
       }
 
-      // old format: string URL
-      const s = String(img);
+      const s = String(img).trim();
+      if (!s) return;
 
-      // if already full URL (cloudinary/http)
+      // 🚫 block placeholder
+      if (s.includes("via.placeholder.com")) return;
+
+      // only allow full URLs here
       if (s.startsWith("http")) list.push(s);
-      else {
-        // if some leftover /uploads/... exists, we cannot guess backend URL here
-        // so we ignore it and fallback will show
-      }
     };
 
     pushImg(product?.image);
@@ -133,7 +136,6 @@ export default function ProductDetails() {
   const submitReview = async () => {
     const token = localStorage.getItem("token");
     if (!token) return nav("/login");
-
     if (!rating || rating < 1 || rating > 5) return;
 
     try {
@@ -180,6 +182,11 @@ export default function ProductDetails() {
     );
   }
 
+  const safeImgError = (e) => {
+    e.currentTarget.onerror = null; // prevent loop
+    e.currentTarget.src = FALLBACK_IMG;
+  };
+
   return (
     <div className="pd-page">
       <div className="pd-topbar">
@@ -206,11 +213,7 @@ export default function ProductDetails() {
                   type="button"
                   title="View image"
                 >
-                  <img
-                    src={img}
-                    alt={`thumb-${idx}`}
-                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
-                  />
+                  <img src={img} alt={`thumb-${idx}`} onError={safeImgError} />
                 </button>
               );
             })}
@@ -231,7 +234,7 @@ export default function ProductDetails() {
               src={activeImg || images[0]}
               alt={product?.name || "Product"}
               loading="lazy"
-              onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
+              onError={safeImgError}
               style={{
                 transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
               }}
@@ -358,7 +361,7 @@ export default function ProductDetails() {
               className="pd-modalImg"
               src={activeImg || images[0]}
               alt={product?.name || "Product"}
-              onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
+              onError={safeImgError}
             />
 
             {images.length > 1 && (
